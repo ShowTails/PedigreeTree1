@@ -1,3 +1,5 @@
+document.getElementById('js-status').textContent = 'JS loaded ✓';
+console.log('JS loaded ✓');
 console.log("JS loaded");
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
