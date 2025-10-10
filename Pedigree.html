@@ -280,28 +280,12 @@
   <text x="1250" y="955" text-anchor="left">GC#:</text>
   <text x="1160" y="975" text-anchor="left">DOB:</text>
 
- <script>
-  // Parse the query string (everything after the "?")
-  const params = new URLSearchParams(window.location.search);
-
-  // Find every element with a data-field attribute
-  document.querySelectorAll('[data-field]').forEach(el => {
-    const fieldName = el.getAttribute('data-field'); // e.g., "name"
-    const fieldValue = params.get(fieldName);        // get value from URL
-
-    // If a value exists for this field, show it
-    if (fieldValue) {
-      el.textContent = decodeURIComponent(fieldValue);
-    }
-  });
-</script>
-
-<div>JS status: <strong id="js-ok">⏳</strong></div>
-<script>document.getElementById('js-ok').textContent='✓';</script>
+<script src="pedigree.js"></script>
   
 </svg>
 </body>
 
 </html>
+
 
 
