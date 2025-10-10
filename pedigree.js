@@ -1,4 +1,4 @@
-
+alert("JS file executed!");
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   document.querySelectorAll('[data-field]').forEach(el => {
