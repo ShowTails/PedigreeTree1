@@ -328,24 +328,62 @@
 <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 
 <!-- Activate zoom / pan -->
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 <script>
 window.addEventListener('load', () => {
   const panZoom = svgPanZoom('#pedigree-svg', {
     zoomEnabled: true,
-    controlIconsEnabled: false,   // hide buttons
+    controlIconsEnabled: false,  // hide built-in buttons
     fit: true,
     center: true,
     minZoom: 0.5,
     maxZoom: 5,
     zoomScaleSensitivity: 0.3,
-    dblClickZoomEnabled: false    // prevent double-tap only zoom-in
+    dblClickZoomEnabled: false   // we’ll use double-tap for reset instead
   });
 
-  // Optional: reset view on double tap instead of zoom-in
   const svgElement = document.getElementById('pedigree-svg');
+
+  // --- Double tap / double click resets zoom ---
   svgElement.addEventListener('dblclick', e => {
     e.preventDefault();
     panZoom.resetZoom();
+  });
+
+  // --- Manual pinch zoom for Glide mobile embeds ---
+  let initialDistance = null;
+  let initialZoom = 1;
+
+  svgElement.addEventListener('pointerdown', e => {
+    svgElement.setPointerCapture(e.pointerId);
+  });
+
+  svgElement.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'touch') return;
+
+    const touches = e.targetTouches || [];
+    if (touches.length === 2) {
+      e.preventDefault();
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (!initialDistance) {
+        initialDistance = distance;
+        initialZoom = panZoom.getZoom();
+      } else {
+        const scale = distance / initialDistance;
+        panZoom.zoom(initialZoom * scale);
+      }
+    }
+  });
+
+  svgElement.addEventListener('pointerup', e => {
+    initialDistance = null;
+  });
+
+  svgElement.addEventListener('pointercancel', () => {
+    initialDistance = null;
   });
 });
 </script>
@@ -353,6 +391,7 @@ window.addEventListener('load', () => {
 </body>
 
 </html>
+
 
 
 
