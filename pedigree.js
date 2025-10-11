@@ -3,7 +3,38 @@
 
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
+// --- Zoom and Pan for SVG ---
+const svg = document.getElementById('pedigree-svg');
+let scale = 1, panX = 0, panY = 0, isDragging = false, startX, startY;
 
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const zoomFactor = 0.1;
+  scale += (e.deltaY < 0 ? zoomFactor : -zoomFactor);
+  scale = Math.min(Math.max(scale, 0.5), 4); // limit zoom range
+  updateTransform();
+});
+
+svg.addEventListener('pointerdown', e => {
+  isDragging = true;
+  startX = e.clientX - panX;
+  startY = e.clientY - panY;
+  svg.setPointerCapture(e.pointerId);
+});
+
+svg.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  panX = e.clientX - startX;
+  panY = e.clientY - startY;
+  updateTransform();
+});
+
+svg.addEventListener('pointerup', () => (isDragging = false));
+svg.addEventListener('pointercancel', () => (isDragging = false));
+
+function updateTransform() {
+  svg.setAttribute('transform', `translate(${panX},${panY}) scale(${scale})`);
+}
   // --- Handle single fields ---
   document.querySelectorAll('[data-field]').forEach(el => {
     const key = el.getAttribute('data-field');
