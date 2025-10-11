@@ -8,10 +8,12 @@
     body {
       margin: 0;
       padding: 0;
+      overflow: hidden;
     }
     svg {
       width: 11in;
       height: 8.5in;
+      user-select: none;
     }
     .box {
       width: 200px;
@@ -46,15 +48,13 @@
 <body>
   
   
-<svg viewBox="0 0 1600 850">
+<svg id="pedigree-svg" viewBox="0 0 1600 850">
 
     <image data-field="logo" x="20" y="-75" width="120" height="120"></image>
     <g transform="translate(155,30)">
       <text x="10" y="-75" text-anchor="left" class="name" data-field="rabbitry"></text>
       <text x="10" y="-55" text-anchor="left" class="name" data-field="street"></text>
-      <text x="10" y="-35" text-anchor="left" class="name" data-field="city"></text>
-      <text x="30" y="-35" text-anchor="left" class="name" data-field="state"></text>
-      <text x="50" y="-35" text-anchor="left" class="name" data-field="zip"></text>
+      <text x="10" y="-35" text-anchor="left" class="name" data-chain="city,state,zip"></text>
       <text x="10" y="-15" text-anchor="left" class="name" data-field="phone"></text>
       <text x="10" y="-5" text-anchor="left" class="name" data-field="email"></text>
 
@@ -301,11 +301,31 @@
  
 </svg>
   
+<!-- Your data/field logic -->
 <script src="pedigree.js"></script>
+
+<!-- Zoom / Pan library -->
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+
+<!-- Activate zoom / pan -->
+<script>
+window.addEventListener('load', () => {
+  svgPanZoom('#pedigree-svg', {
+    zoomEnabled: true,
+    controlIconsEnabled: true,  // + / − / reset buttons
+    fit: true,
+    center: true,
+    minZoom: 0.5,
+    maxZoom: 5,
+    zoomScaleSensitivity: 0.3
+  });
+});
+</script>
 
 </body>
 
 </html>
+
 
 
 
