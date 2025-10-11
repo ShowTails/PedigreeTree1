@@ -11,9 +11,12 @@
       overflow: hidden;
     }
     svg {
+      touch-action: none;
+      -ms-touch-action: none;
       width: 11in;
       height: 8.5in;
       user-select: none;
+      
     }
     .box {
       width: 200px;
@@ -327,14 +330,22 @@
 <!-- Activate zoom / pan -->
 <script>
 window.addEventListener('load', () => {
-  svgPanZoom('#pedigree-svg', {
+  const panZoom = svgPanZoom('#pedigree-svg', {
     zoomEnabled: true,
-    controlIconsEnabled: true,  // + / − / reset buttons
+    controlIconsEnabled: false,   // hide buttons
     fit: true,
     center: true,
     minZoom: 0.5,
     maxZoom: 5,
-    zoomScaleSensitivity: 0.3
+    zoomScaleSensitivity: 0.3,
+    dblClickZoomEnabled: false    // prevent double-tap only zoom-in
+  });
+
+  // Optional: reset view on double tap instead of zoom-in
+  const svgElement = document.getElementById('pedigree-svg');
+  svgElement.addEventListener('dblclick', e => {
+    e.preventDefault();
+    panZoom.resetZoom();
   });
 });
 </script>
@@ -342,6 +353,7 @@ window.addEventListener('load', () => {
 </body>
 
 </html>
+
 
 
 
