@@ -577,10 +577,23 @@ window.addEventListener('load', () => {
     document.getElementById('rabbitry-logo').src = decodeURIComponent(logoUrl);
   }
 </script>
+  <script>
+  const params = new URLSearchParams(window.location.search);
+  let logo = params.get('logo');
+
+  // If Glide sent a partial logo with http...&rabbitry= in it, reconstruct it
+  if (logo && !logo.includes('storage.googleapis.com') && location.href.includes('storage.googleapis.com')) {
+    const full = location.href.match(/logo=(.*?)&/);
+    if (full) logo = full[1];
+  }
+
+  if (logo) document.getElementById('rabbitry-logo').src = decodeURIComponent(logo);
+</script>
 
 </body>
 
 </html>
+
 
 
 
