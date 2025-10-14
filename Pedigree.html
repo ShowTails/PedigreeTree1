@@ -568,9 +568,20 @@ window.addEventListener('load', () => {
   });
 </script>
 
+  <img id="rabbitry-logo" alt="Rabbitry Logo">
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const logoUrl = params.get('logo');
+  if (logoUrl) {
+    document.getElementById('rabbitry-logo').src = decodeURIComponent(logoUrl);
+  }
+</script>
+
 </body>
 
 </html>
+
 
 
 
