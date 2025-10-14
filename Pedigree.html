@@ -48,6 +48,21 @@
     }
 
   </style>
+  <style>
+  @media print {
+    #print-btn {
+      display: none;
+    }
+    @page {
+      size: landscape;
+      margin: 0.5in;
+    }
+    body {
+      margin: 0;
+      -webkit-print-color-adjust: exact;
+    }
+  }
+</style>
 </head>
 <body>
   
@@ -428,6 +443,18 @@
 
  
 </svg>
+
+  <button id="print-btn" style="
+  position: absolute; 
+  top: 10px; 
+  right: 10px; 
+  padding: 8px 16px; 
+  background-color: #4A4A4A; 
+  color: white; 
+  border: none; 
+  border-radius: 4px; 
+  cursor: pointer;
+">Print / Save PDF</button>
   
 <!-- Your data/field logic -->
 <script src="pedigree.js"></script>
@@ -496,9 +523,16 @@ window.addEventListener('load', () => {
 });
 </script>
 
+  <script>
+  document.getElementById('print-btn').addEventListener('click', function() {
+    window.print();
+  });
+</script>
+
 </body>
 
 </html>
+
 
 
 
