@@ -506,16 +506,30 @@
 <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 <script>
 window.addEventListener('load', () => {
-  const panZoom = svgPanZoom('#pedigree-svg', {
-    zoomEnabled: true,
-    controlIconsEnabled: false,  // hide built-in buttons
-    fit: true,
-    center: true,
-    minZoom: 0.5,
-    maxZoom: 5,
-    zoomScaleSensitivity: 0.3,
-    dblClickZoomEnabled: false   // we’ll use double-tap for reset instead
-  });
+ const panZoom = svgPanZoom('#pedigree-svg', {
+  zoomEnabled: true,
+  controlIconsEnabled: false,
+  fit: true,
+  center: true,
+  minZoom: 0.5,
+  maxZoom: 5,
+  zoomScaleSensitivity: 0.3,
+  dblClickZoomEnabled: false,
+  beforePan: function(oldPan, newPan) {
+    // Define padding space (optional)
+    const padding = 50;
+    const sizes = this.getSizes();
+    const leftLimit = -((sizes.viewBox.x + sizes.viewBox.width) * sizes.realZoom) + padding;
+    const rightLimit = sizes.width - padding;
+    const topLimit = -((sizes.viewBox.y + sizes.viewBox.height) * sizes.realZoom) + padding;
+    const bottomLimit = sizes.height - padding;
+
+    return {
+      x: Math.max(leftLimit, Math.min(rightLimit, newPan.x)),
+      y: Math.max(topLimit, Math.min(bottomLimit, newPan.y))
+    };
+  }
+});
 
   const svgElement = document.getElementById('pedigree-svg');
 
@@ -596,6 +610,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
