@@ -499,14 +499,16 @@
 <!-- Your data/field logic -->
 <script src="pedigree.js"></script>
 
-<!-- Zoom / Pan library -->
-<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+
+
 
 <!-- Activate zoom / pan -->
 <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+
 <script>
 window.addEventListener('load', () => {
-  window.panZoomInstance = svgPanZoom('#pedigree-svg', {
+  // Initialize svg-pan-zoom with bounded panning
+  const panZoom = svgPanZoom('#pedigree-svg', {
     zoomEnabled: true,
     controlIconsEnabled: false,
     fit: true,
@@ -516,15 +518,15 @@ window.addEventListener('load', () => {
     zoomScaleSensitivity: 0.3,
     dblClickZoomEnabled: false,
 
-    // ✅ Keep users from scrolling the pedigree off-screen
-    beforePan: function(oldPan, newPan) {
-      const padding = 50; // edge buffer
+    // Keep users from dragging the pedigree off-screen
+    beforePan: function (oldPan, newPan) {
       const sizes = this.getSizes();
+      const padding = 40;
 
-      const leftLimit = -((sizes.viewBox.x + sizes.viewBox.width) * sizes.realZoom) + padding;
-      const rightLimit = sizes.width - padding;
-      const topLimit = -((sizes.viewBox.y + sizes.viewBox.height) * sizes.realZoom) + padding;
-      const bottomLimit = sizes.height - padding;
+      const leftLimit = -((sizes.viewBox.x + sizes.viewBox.width) * sizes.realZoom) + sizes.width - padding;
+      const rightLimit = -(sizes.viewBox.x * sizes.realZoom) + padding;
+      const topLimit = -((sizes.viewBox.y + sizes.viewBox.height) * sizes.realZoom) + sizes.height - padding;
+      const bottomLimit = -(sizes.viewBox.y * sizes.realZoom) + padding;
 
       return {
         x: Math.max(leftLimit, Math.min(rightLimit, newPan.x)),
@@ -533,74 +535,53 @@ window.addEventListener('load', () => {
     }
   });
 
-  const svgElement = document.getElementById('pedigree-svg');
+  // Expose for later use (printing)
+  window.panZoomInstance = panZoom;
 
-  // ✅ Double-tap or double-click resets zoom AND re-centers
+  // Double-click/tap → reset and re-center
+  const svgElement = document.getElementById('pedigree-svg');
   svgElement.addEventListener('dblclick', e => {
     e.preventDefault();
     panZoom.resetZoom();
-    panZoom.center();   // recenters viewBox
+    panZoom.center();
   });
-
-  // ✅ Manual pinch zoom (for Glide mobile embeds)
-  let initialDistance = null;
-  let initialZoom = 1;
-
-  svgElement.addEventListener('pointerdown', e => {
-    svgElement.setPointerCapture(e.pointerId);
-  });
-
-  svgElement.addEventListener('pointermove', e => {
-    if (e.pointerType !== 'touch') return;
-
-    const touches = e.targetTouches || [];
-    if (touches.length === 2) {
-      e.preventDefault();
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      if (!initialDistance) {
-        initialDistance = distance;
-        initialZoom = panZoom.getZoom();
-      } else {
-        const scale = distance / initialDistance;
-        panZoom.zoom(initialZoom * scale);
-      }
-    }
-  });
-
-  svgElement.addEventListener('pointerup', () => (initialDistance = null));
-  svgElement.addEventListener('pointercancel', () => (initialDistance = null));
 });
 </script>
 
 <script>
-document.getElementById('print-btn').addEventListener('click', function() {
-  const svg = document.getElementById('pedigree-svg');
-  const panZoom = window.panZoomInstance;
+/* === Fix print alignment === */
+(() => {
+  let savedPan = null;
+  let savedZoom = null;
 
-  if (panZoom) {
-    // Save current transform state
-    const state = panZoom.getPan();
-    const zoom = panZoom.getZoom();
-
-    // Reset to default before print (ensures perfect centering)
-    panZoom.resetZoom();
-    panZoom.center();
-
-    // Print now
-    window.print();
-
-    // Restore after print
-    setTimeout(() => {
-      panZoom.zoom(zoom);
-      panZoom.pan(state);
-    }, 500);
-  } else {
-    window.print();
+  function resetForPrint() {
+    const inst = window.panZoomInstance;
+    if (!inst) return;
+    savedPan = inst.getPan();
+    savedZoom = inst.getZoom();
+    inst.resetZoom();  // Removes transforms
+    inst.center();     // Centers pedigree in print field
   }
-});
+
+  function restoreAfterPrint() {
+    const inst = window.panZoomInstance;
+    if (!inst || savedPan == null || savedZoom == null) return;
+    inst.zoom(savedZoom);
+    inst.pan(savedPan);
+  }
+
+  const btn = document.getElementById('print-btn');
+  btn.addEventListener('click', () => {
+    resetForPrint();
+    requestAnimationFrame(() => {
+      window.print();
+      setTimeout(restoreAfterPrint, 400);
+    });
+  });
+
+  window.addEventListener('beforeprint', resetForPrint);
+  window.addEventListener('afterprint', restoreAfterPrint);
+})();
 </script>
 
   <script>
@@ -630,6 +611,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
