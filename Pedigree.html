@@ -104,7 +104,7 @@
 </style>
 </head>
 <body>
-  <script>
+  
   <div id="pedigree-container">
 <svg id="pedigree-svg" viewBox="0 0 1600 850">
 
@@ -480,25 +480,7 @@
   <text x="1200" y="975" text-anchor="left" data-field="ddddob"></text>
 
     
-    document.querySelectorAll('.box').forEach(box => {
-  box.addEventListener('click', () => {
-    const slot = box.getAttribute('data-slot');
-    if (!slot) return;
-
-    // Replace this base URL with your actual Glide app link:
-    const appBase = 'https://showtails.glideapp.io/';
-    
-    // Redirect into Glide with ?edit=slot
-    window.location.href = `${appBase}?edit=${encodeURIComponent(slot)}`;
-  });
-});
-
- // STEP 3. Add a visual hover cue (optional)
-document.querySelectorAll('.box').forEach(box => {
-  box.style.cursor = 'pointer';
-  box.addEventListener('mouseenter', () => box.style.stroke = '#00aaff');
-  box.addEventListener('mouseleave', () => box.style.stroke = 'black');
-});
+ 
 </svg>
 </div>
   <button id="print-btn" style="
@@ -513,7 +495,7 @@ document.querySelectorAll('.box').forEach(box => {
   cursor: pointer;
 ">Print / Save PDF</button>
 
-  </script>
+
 <!-- Your data/field logic -->
 <script src="pedigree.js"></script>
 
@@ -612,6 +594,7 @@ window.addEventListener('load', () => {
 </body>
 
 </html>
+
 
 
 
