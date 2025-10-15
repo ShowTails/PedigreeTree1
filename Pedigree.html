@@ -506,7 +506,7 @@
 <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 <script>
 window.addEventListener('load', () => {
-  const panZoom = svgPanZoom('#pedigree-svg', {
+  window.panZoomInstance = svgPanZoom('#pedigree-svg', {
     zoomEnabled: true,
     controlIconsEnabled: false,
     fit: true,
@@ -575,10 +575,32 @@ window.addEventListener('load', () => {
 });
 </script>
 
-  <script>
-  document.getElementById('print-btn').addEventListener('click', function() {
+<script>
+document.getElementById('print-btn').addEventListener('click', function() {
+  const svg = document.getElementById('pedigree-svg');
+  const panZoom = window.panZoomInstance;
+
+  if (panZoom) {
+    // Save current transform state
+    const state = panZoom.getPan();
+    const zoom = panZoom.getZoom();
+
+    // Reset to default before print (ensures perfect centering)
+    panZoom.resetZoom();
+    panZoom.center();
+
+    // Print now
     window.print();
-  });
+
+    // Restore after print
+    setTimeout(() => {
+      panZoom.zoom(zoom);
+      panZoom.pan(state);
+    }, 500);
+  } else {
+    window.print();
+  }
+});
 </script>
 
   <script>
@@ -608,6 +630,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
