@@ -591,9 +591,23 @@ window.addEventListener('load', () => {
   if (logo) document.getElementById('logo').src = decodeURIComponent(logo);
 </script>
 
+  <script>
+// === Glide-safe Clickable Pedigree Boxes ===
+document.querySelectorAll('.box').forEach(box => {
+  box.style.cursor = 'pointer';
+  box.addEventListener('click', () => {
+    const slot = box.getAttribute('data-slot');
+    if (!slot) return;
+    window.parent.postMessage({ pedigreeEdit: slot }, '*');
+    box.style.stroke = '#00aaff';
+    setTimeout(() => (box.style.stroke = 'black'), 300);
+  });
+});
+</script>
 </body>
 
 </html>
+
 
 
 
