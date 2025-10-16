@@ -517,82 +517,86 @@ window.addEventListener('load', () => {
   const panZoom = svgPanZoom(svgElement, {
     zoomEnabled: true,
     controlIconsEnabled: false,
-    fit: false,        // we'll handle custom fit manually
+    fit: false,
     center: false,
     minZoom: 0.25,
-    maxZoom: 5,
+    maxZoom: 8,               // allow deeper zoom
     zoomScaleSensitivity: 0.3,
     dblClickZoomEnabled: false
   });
 
-  // Store globally for print script
   window.panZoomInstance = panZoom;
 
-  // === Custom true fit-to-container ===
-  function fitPedigreeToContainer() {
+  // === Custom fit only once at load ===
+  function fitOnce() {
     const container = document.getElementById('pedigree-container');
-    const bbox = svgElement.viewBox.baseVal;
-    const widthRatio = container.clientWidth / bbox.width;
-    const heightRatio = container.clientHeight / bbox.height;
+    const vb = svgElement.viewBox.baseVal;
+    const widthRatio = container.clientWidth / vb.width;
+    const heightRatio = container.clientHeight / vb.height;
     const scale = Math.min(widthRatio, heightRatio);
-
     panZoom.zoom(scale);
     panZoom.pan({
-      x: (container.clientWidth - bbox.width * scale) / 2,
-      y: (container.clientHeight - bbox.height * scale) / 2
+      x: (container.clientWidth - vb.width * scale) / 2,
+      y: (container.clientHeight - vb.height * scale) / 2
     });
   }
 
-  // Fit once at load
-  fitPedigreeToContainer();
+  fitOnce();
 
-  // Refits when window resizes or device orientation changes
-  window.addEventListener('resize', fitPedigreeToContainer);
-  window.addEventListener('orientationchange', fitPedigreeToContainer);
+  // === Double-click/tap resets to fit ===
+  svgElement.addEventListener('dblclick', e => {
+    e.preventDefault();
+    fitOnce();
+  });
 
-  // === Constrain panning (after fit) ===
+  // === Keep panning constrained ===
   panZoom.setBeforePan(function (oldPan, newPan) {
-    const sizes = this.getSizes();
-    const padding = 40;
-    const leftLimit = -((sizes.viewBox.x + sizes.viewBox.width) * sizes.realZoom) + sizes.width - padding;
-    const rightLimit = -(sizes.viewBox.x * sizes.realZoom) + padding;
-    const topLimit = -((sizes.viewBox.y + sizes.viewBox.height) * sizes.realZoom) + sizes.height - padding;
-    const bottomLimit = -(sizes.viewBox.y * sizes.realZoom) + padding;
-
+    const s = this.getSizes();
+    const pad = 40;
+    const left = -((s.viewBox.x + s.viewBox.width) * s.realZoom) + s.width - pad;
+    const right = -(s.viewBox.x * s.realZoom) + pad;
+    const top = -((s.viewBox.y + s.viewBox.height) * s.realZoom) + s.height - pad;
+    const bottom = -(s.viewBox.y * s.realZoom) + pad;
     return {
-      x: Math.max(leftLimit, Math.min(rightLimit, newPan.x)),
-      y: Math.max(topLimit, Math.min(bottomLimit, newPan.y))
+      x: Math.max(left, Math.min(right, newPan.x)),
+      y: Math.max(top, Math.min(bottom, newPan.y))
     };
   });
 
-  // === Double-tap / click resets to perfect fit ===
-  svgElement.addEventListener('dblclick', e => {
-    e.preventDefault();
-    fitPedigreeToContainer();
+  // === Refit only when container truly changes size ===
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => fitOnce(), 300);
   });
+  window.addEventListener('orientationchange', () => fitOnce());
 });
 </script>
 
 <script>
-/* === Print alignment fix (unchanged) === */
+/* === Print alignment fix === */
 (() => {
-  let savedPan = null;
-  let savedZoom = null;
+  let savedPan = null, savedZoom = null;
 
   function resetForPrint() {
     const inst = window.panZoomInstance;
     if (!inst) return;
     savedPan = inst.getPan();
     savedZoom = inst.getZoom();
+
+    // True-size scale for 11x8.5 print output
     inst.resetZoom();
     inst.center();
+    inst.zoom(1);  // ensures original 1:1 SVG scaling for crisp print
   }
 
   function restoreAfterPrint() {
     const inst = window.panZoomInstance;
-    if (!inst || savedPan == null || savedZoom == null) return;
-    inst.zoom(savedZoom);
-    inst.pan(savedPan);
+    if (!inst) return;
+    if (savedZoom && savedPan) {
+      inst.zoom(savedZoom);
+      inst.pan(savedPan);
+    }
   }
 
   const btn = document.getElementById('print-btn');
@@ -638,6 +642,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
