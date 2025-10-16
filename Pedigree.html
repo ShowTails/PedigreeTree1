@@ -10,15 +10,14 @@
       padding: 0;
       overflow: hidden;
     }
-    svg {
-      touch-action: none;
-      -ms-touch-action: none;
-      width: 11in;
-      height: 8.5in;
-      user-select: none;
-      cursor: grab;
-      
-    }
+ svg {
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  cursor: grab;
+  /* Let pan/zoom library handle gestures */
+  touch-action: pinch-zoom;
+}
     .box {
       width: 220px;
       height: 125px;
@@ -64,14 +63,9 @@
   max-height: 8.5in;
   box-sizing: border-box;
   margin: 0 auto;
-  overflow: hidden;
+  overflow: visible;
 }
 
-  svg {
-    width: 100%;
-    height: 100%;
-    transition: transform 0.3s ease;
-  }
 
   /* Print rules */
   @media print {
@@ -575,6 +569,17 @@ window.addEventListener("load", () => {
 </script>
 
 <script>
+const svgFrameFix = () => {
+  const svg = document.getElementById('pedigree-svg');
+  // Force pointer events inside Glide’s iframe
+  ['wheel', 'mousedown', 'mouseup', 'mousemove', 'touchstart', 'touchmove', 'touchend'].forEach(ev => {
+    svg.addEventListener(ev, e => e.stopPropagation(), { passive: false });
+  });
+};
+window.addEventListener('load', svgFrameFix);
+</script>
+  
+<script>
 /* === Print alignment + true 11-inch scaling === */
 (() => {
   let savedPan, savedZoom;
@@ -645,6 +650,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
