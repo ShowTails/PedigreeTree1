@@ -507,38 +507,42 @@
 
 <script>
 window.addEventListener('load', () => {
-  // Initialize svg-pan-zoom with bounded panning
+  // Initialize svg-pan-zoom
   const panZoom = svgPanZoom('#pedigree-svg', {
     zoomEnabled: true,
     controlIconsEnabled: false,
     fit: true,
     center: true,
-    minZoom: 0.5,
+    minZoom: 0.3,  // Allow it to zoom out further to show the full pedigree
     maxZoom: 5,
     zoomScaleSensitivity: 0.3,
-    dblClickZoomEnabled: false,
-
-    // Keep users from dragging the pedigree off-screen
-    beforePan: function (oldPan, newPan) {
-      const sizes = this.getSizes();
-      const padding = 40;
-
-      const leftLimit = -((sizes.viewBox.x + sizes.viewBox.width) * sizes.realZoom) + sizes.width - padding;
-      const rightLimit = -(sizes.viewBox.x * sizes.realZoom) + padding;
-      const topLimit = -((sizes.viewBox.y + sizes.viewBox.height) * sizes.realZoom) + sizes.height - padding;
-      const bottomLimit = -(sizes.viewBox.y * sizes.realZoom) + padding;
-
-      return {
-        x: Math.max(leftLimit, Math.min(rightLimit, newPan.x)),
-        y: Math.max(topLimit, Math.min(bottomLimit, newPan.y))
-      };
-    }
+    dblClickZoomEnabled: false
   });
 
-  // Expose for later use (printing)
+  // Store instance globally
   window.panZoomInstance = panZoom;
 
-  // Double-click/tap → reset and re-center
+  // ✅ Auto fit-to-screen on load (fix for web embedded view)
+  panZoom.fit();
+  panZoom.center();
+
+  // ✅ Reapply boundaries AFTER initial fit
+  panZoom.setBeforePan(function (oldPan, newPan) {
+    const sizes = this.getSizes();
+    const padding = 40;
+
+    const leftLimit = -((sizes.viewBox.x + sizes.viewBox.width) * sizes.realZoom) + sizes.width - padding;
+    const rightLimit = -(sizes.viewBox.x * sizes.realZoom) + padding;
+    const topLimit = -((sizes.viewBox.y + sizes.viewBox.height) * sizes.realZoom) + sizes.height - padding;
+    const bottomLimit = -(sizes.viewBox.y * sizes.realZoom) + padding;
+
+    return {
+      x: Math.max(leftLimit, Math.min(rightLimit, newPan.x)),
+      y: Math.max(topLimit, Math.min(bottomLimit, newPan.y))
+    };
+  });
+
+  // ✅ Double-click or double-tap resets zoom and centers
   const svgElement = document.getElementById('pedigree-svg');
   svgElement.addEventListener('dblclick', e => {
     e.preventDefault();
@@ -549,7 +553,7 @@ window.addEventListener('load', () => {
 </script>
 
 <script>
-/* === Fix print alignment === */
+/* === Print alignment fix === */
 (() => {
   let savedPan = null;
   let savedZoom = null;
@@ -559,8 +563,8 @@ window.addEventListener('load', () => {
     if (!inst) return;
     savedPan = inst.getPan();
     savedZoom = inst.getZoom();
-    inst.resetZoom();  // Removes transforms
-    inst.center();     // Centers pedigree in print field
+    inst.resetZoom();
+    inst.center();
   }
 
   function restoreAfterPrint() {
@@ -583,7 +587,6 @@ window.addEventListener('load', () => {
   window.addEventListener('afterprint', restoreAfterPrint);
 })();
 </script>
-
   <script>
   const params = new URLSearchParams(window.location.search);
   const logoUrl = params.get('logo');
@@ -611,6 +614,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
