@@ -578,6 +578,49 @@ const svgFrameFix = () => {
 };
 window.addEventListener('load', svgFrameFix);
 </script>
+
+<script>
+/* --- Mobile pinch-zoom & pan bridge --- */
+window.addEventListener("load", () => {
+  const svg = document.getElementById("pedigree-svg");
+
+  // 1️⃣ Allow two-finger gestures to reach the SVG even inside Glide’s iframe
+  const iframeFixEvents = ["touchstart", "touchmove", "touchend", "gesturestart"];
+  iframeFixEvents.forEach(ev =>
+    svg.addEventListener(ev, e => e.stopPropagation(), { passive: false })
+  );
+
+  // 2️⃣ Implement manual pinch-zoom when svg-pan-zoom doesn't see native touches
+  let prevDist = null;
+  svg.addEventListener("touchstart", e => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      prevDist = Math.hypot(dx, dy);
+    }
+  }, { passive: false });
+
+  svg.addEventListener("touchmove", e => {
+    if (e.touches.length === 2 && prevDist) {
+      e.preventDefault(); // disable browser zoom
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const newDist = Math.hypot(dx, dy);
+      const scale = newDist / prevDist;
+      window.panZoomInstance.zoomBy(scale);
+      prevDist = newDist;
+    } else if (e.touches.length === 1) {
+      // single-finger pan
+      e.preventDefault();
+      const touch = e.touches[0];
+      window.panZoomInstance.panBy({ x: touch.movementX || 0, y: touch.movementY || 0 });
+    }
+  }, { passive: false });
+
+  svg.addEventListener("touchend", () => (prevDist = null));
+});
+</script>
+
   
 <script>
 /* === Print alignment + true 11-inch scaling === */
@@ -650,6 +693,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
