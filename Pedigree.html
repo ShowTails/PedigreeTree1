@@ -507,30 +507,49 @@
 
 <script>
 window.addEventListener('load', () => {
+  const svgElement = document.getElementById('pedigree-svg');
+
   // Initialize svg-pan-zoom
-  const panZoom = svgPanZoom('#pedigree-svg', {
+  const panZoom = svgPanZoom(svgElement, {
     zoomEnabled: true,
     controlIconsEnabled: false,
-    fit: true,
-    center: true,
-    minZoom: 0.3,  // Allow it to zoom out further to show the full pedigree
+    fit: false,        // we'll handle custom fit manually
+    center: false,
+    minZoom: 0.25,
     maxZoom: 5,
     zoomScaleSensitivity: 0.3,
     dblClickZoomEnabled: false
   });
 
-  // Store instance globally
+  // Store globally for print script
   window.panZoomInstance = panZoom;
 
-  // ✅ Auto fit-to-screen on load (fix for web embedded view)
-  panZoom.fit();
-  panZoom.center();
+  // === Custom true fit-to-container ===
+  function fitPedigreeToContainer() {
+    const container = document.getElementById('pedigree-container');
+    const bbox = svgElement.viewBox.baseVal;
+    const widthRatio = container.clientWidth / bbox.width;
+    const heightRatio = container.clientHeight / bbox.height;
+    const scale = Math.min(widthRatio, heightRatio);
 
-  // ✅ Reapply boundaries AFTER initial fit
+    panZoom.zoom(scale);
+    panZoom.pan({
+      x: (container.clientWidth - bbox.width * scale) / 2,
+      y: (container.clientHeight - bbox.height * scale) / 2
+    });
+  }
+
+  // Fit once at load
+  fitPedigreeToContainer();
+
+  // Refits when window resizes or device orientation changes
+  window.addEventListener('resize', fitPedigreeToContainer);
+  window.addEventListener('orientationchange', fitPedigreeToContainer);
+
+  // === Constrain panning (after fit) ===
   panZoom.setBeforePan(function (oldPan, newPan) {
     const sizes = this.getSizes();
     const padding = 40;
-
     const leftLimit = -((sizes.viewBox.x + sizes.viewBox.width) * sizes.realZoom) + sizes.width - padding;
     const rightLimit = -(sizes.viewBox.x * sizes.realZoom) + padding;
     const topLimit = -((sizes.viewBox.y + sizes.viewBox.height) * sizes.realZoom) + sizes.height - padding;
@@ -542,18 +561,16 @@ window.addEventListener('load', () => {
     };
   });
 
-  // ✅ Double-click or double-tap resets zoom and centers
-  const svgElement = document.getElementById('pedigree-svg');
+  // === Double-tap / click resets to perfect fit ===
   svgElement.addEventListener('dblclick', e => {
     e.preventDefault();
-    panZoom.resetZoom();
-    panZoom.center();
+    fitPedigreeToContainer();
   });
 });
 </script>
 
 <script>
-/* === Print alignment fix === */
+/* === Print alignment fix (unchanged) === */
 (() => {
   let savedPan = null;
   let savedZoom = null;
@@ -587,6 +604,9 @@ window.addEventListener('load', () => {
   window.addEventListener('afterprint', restoreAfterPrint);
 })();
 </script>
+  
+  
+  
   <script>
   const params = new URLSearchParams(window.location.search);
   const logoUrl = params.get('logo');
@@ -614,6 +634,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
