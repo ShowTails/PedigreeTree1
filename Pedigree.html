@@ -519,8 +519,13 @@ svg.addEventListener("pointermove", e => {
     // single pointer: pan
     const dx = e.clientX - prev.x;
     const dy = e.clientY - prev.y;
-    if (isFinite(dx) && isFinite(dy)) {
+    if (Number.isFinite(dx) && Number.isFinite(dy)) {
       panZoom.panBy({ x: dx, y: dy });
+    } else {
+      // bad movement data; reset tracking
+      active.delete(e.pointerId);
+      lastDist = null;
+      return;
     }
   } else if (active.size === 2) {
     // two pointers: pinch zoom
@@ -529,14 +534,16 @@ svg.addEventListener("pointermove", e => {
     const dy = pts[0].y - pts[1].y;
     const dist = Math.hypot(dx, dy);
 
-    if (isFinite(dist) && dist > 0) {
-      if (lastDist && isFinite(lastDist)) {
+    if (Number.isFinite(dist) && dist > 0) {
+      if (lastDist && Number.isFinite(lastDist)) {
         const scale = dist / lastDist;
-        if (isFinite(scale) && scale > 0) {
+        if (Number.isFinite(scale) && scale > 0) {
           panZoom.zoomBy(scale);
         }
       }
       lastDist = dist;
+    } else {
+      lastDist = null; // reset if invalid distance
     }
   }
 });
@@ -630,6 +637,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
