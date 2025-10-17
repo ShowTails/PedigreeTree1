@@ -515,6 +515,7 @@ svg {
     if (!validBox(vb) || !cw || !ch) return; // wait until non-zero
 
     panZoom = svgPanZoom(svg, {
+      window.panZoomInstance = panZoom;
       panEnabled: true,
       zoomEnabled: true,
       mouseWheelZoomEnabled: true,
@@ -782,6 +783,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
