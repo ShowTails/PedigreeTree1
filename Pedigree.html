@@ -501,38 +501,51 @@ window.addEventListener("load", () => {
     });
 
     // pointer support (same as before)
-    const active = new Map();
-    let lastDist = null;
+   const active = new Map();
+let lastDist = null;
 
-    svg.addEventListener("pointerdown", e => {
-      svg.setPointerCapture(e.pointerId);
-      active.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    });
+svg.addEventListener("pointerdown", e => {
+  svg.setPointerCapture(e.pointerId);
+  active.set(e.pointerId, { x: e.clientX, y: e.clientY });
+});
 
-    svg.addEventListener("pointermove", e => {
-      if (!active.has(e.pointerId)) return;
-      const prev = active.get(e.pointerId);
-      active.set(e.pointerId, { x: e.clientX, y: e.clientY });
+svg.addEventListener("pointermove", e => {
+  if (!active.has(e.pointerId)) return;
 
-      if (active.size === 1) {
-        panZoom.panBy({ x: e.clientX - prev.x, y: e.clientY - prev.y });
-      } else if (active.size === 2) {
-        const pts = [...active.values()];
-        const dx = pts[0].x - pts[1].x;
-        const dy = pts[0].y - pts[1].y;
-        const dist = Math.hypot(dx, dy);
-        if (lastDist) {
-          panZoom.zoomBy(dist / lastDist);
+  const prev = active.get(e.pointerId);
+  active.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (active.size === 1) {
+    // single pointer: pan
+    const dx = e.clientX - prev.x;
+    const dy = e.clientY - prev.y;
+    if (isFinite(dx) && isFinite(dy)) {
+      panZoom.panBy({ x: dx, y: dy });
+    }
+  } else if (active.size === 2) {
+    // two pointers: pinch zoom
+    const pts = [...active.values()];
+    const dx = pts[0].x - pts[1].x;
+    const dy = pts[0].y - pts[1].y;
+    const dist = Math.hypot(dx, dy);
+
+    if (isFinite(dist) && dist > 0) {
+      if (lastDist && isFinite(lastDist)) {
+        const scale = dist / lastDist;
+        if (isFinite(scale) && scale > 0) {
+          panZoom.zoomBy(scale);
         }
-        lastDist = dist;
       }
-    });
+      lastDist = dist;
+    }
+  }
+});
 
-    svg.addEventListener("pointerup", e => {
-      active.delete(e.pointerId);
-      if (active.size < 2) lastDist = null;
-    });
-    svg.addEventListener("pointercancel", e => active.delete(e.pointerId));
+svg.addEventListener("pointerup", e => {
+  active.delete(e.pointerId);
+  if (active.size < 2) lastDist = null;
+});
+svg.addEventListener("pointercancel", e => active.delete(e.pointerId));
 
     svg.addEventListener("dblclick", e => {
       e.preventDefault();
@@ -617,6 +630,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
