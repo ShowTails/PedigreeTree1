@@ -620,6 +620,45 @@ svg {
     });
   }
 
+// --- Mobile pinch gesture support (iOS/Android WebViews) ---
+let pinchActive = false;
+let lastDistance = null;
+
+svg.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    pinchActive = true;
+    lastDistance = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+}, { passive: false });
+
+svg.addEventListener('touchmove', e => {
+  if (pinchActive && e.touches.length === 2 && window.panZoomInstance) {
+    e.preventDefault(); // stop page zoom
+    const newDistance = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    const scale = newDistance / lastDistance;
+    if (isFinite(scale) && scale > 0) {
+      const rect = svg.getBoundingClientRect();
+      const mid = {
+        x: (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left,
+        y: (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top
+      };
+      window.panZoomInstance.zoomAtPoint(scale, mid);
+    }
+    lastDistance = newDistance;
+  }
+}, { passive: false });
+
+svg.addEventListener('touchend', () => {
+  pinchActive = false;
+  lastDistance = null;
+});
+  
   // Re-init/refit when the embed finally lays out or changes size
   const ro = new ResizeObserver(() => {
     if (!initialized) {
@@ -644,7 +683,7 @@ svg {
 </script>
   
 <script>
-/* === Print alignment + true 11-inch scaling === */
+/* === Print alignment + true 11-inch scaling (desktop + mobile safe) === */
 (() => {
   let savedPan, savedZoom;
 
@@ -654,13 +693,18 @@ svg {
     savedPan = inst.getPan();
     savedZoom = inst.getZoom();
 
-    // Reset view and scale so 1600 SVG units ≈ 11 inches
+    // Reset to true scale and center before printing
     inst.resetZoom();
     inst.center();
-    const svgWidth = 1600;      // from your viewBox
-    const targetPx = 1056;      // 11in × 96 DPI
+
+    // 1600 SVG units ≈ 11 inches (≈1056 px at 96 DPI)
+    const svgWidth = 1600;
+    const targetPx = 1056;
     const scale = targetPx / svgWidth;
     inst.zoom(scale);
+
+    // Center perfectly for print frame
+    inst.pan({ x: 0, y: 0 });
   }
 
   function restoreAfterPrint() {
@@ -672,19 +716,43 @@ svg {
   }
 
   const btn = document.getElementById('print-btn');
+
   btn.addEventListener('click', () => {
-    resetForPrint();
-    requestAnimationFrame(() => {
+    const inst = window.panZoomInstance;
+    if (!inst) {
       window.print();
-      setTimeout(restoreAfterPrint, 400);
+      return;
+    }
+
+    resetForPrint();
+
+    // ✅ Allow two browser frames for SVG transform to apply
+    requestAnimationFrame(() => {
+      inst.resize();      // Force svg-pan-zoom to recalc
+      inst.updateBBox();  // Flush its internal box cache
+
+      // Allow rendering time (mobile webviews need this)
+      setTimeout(() => {
+        window.print();
+
+        // Wait until after print preview closes
+        setTimeout(() => restoreAfterPrint(), 1500);
+      }, 400);
     });
   });
 
+  // Support native print dialog triggers (desktop browsers)
   window.addEventListener('beforeprint', resetForPrint);
   window.addEventListener('afterprint', restoreAfterPrint);
+
+  // ✅ Auto-align on orientation change (mobile landscape/portrait)
+  window.addEventListener('orientationchange', () => {
+    const inst = window.panZoomInstance;
+    if (inst) setTimeout(() => resetForPrint(), 600);
+  });
 })();
 </script>
-  
+
   
   
   <script>
@@ -714,6 +782,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
