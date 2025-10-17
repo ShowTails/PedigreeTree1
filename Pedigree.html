@@ -464,35 +464,47 @@ window.addEventListener("load", () => {
   const svg = document.getElementById("pedigree-svg");
   const container = document.getElementById("pedigree-container");
 
-  function initWhenReady() {
+  function isValidBox(vb) {
+    return vb && isFinite(vb.width) && vb.width > 0 && isFinite(vb.height) && vb.height > 0;
+  }
+
+  function initPanZoom() {
     const vb = svg.viewBox.baseVal;
-    if (!vb || vb.width === 0 || vb.height === 0 || container.clientWidth === 0) {
-      requestAnimationFrame(initWhenReady);
+    if (!isValidBox(vb) || container.clientWidth === 0 || container.clientHeight === 0) {
+      // Try again on the next frame until layout is stable
+      requestAnimationFrame(initPanZoom);
       return;
     }
 
-    // initialize built-in pan/zoom handling
+    // Create the instance once dimensions are real
     const panZoom = svgPanZoom(svg, {
       zoomEnabled: true,
       panEnabled: true,
       controlIconsEnabled: false,
-      fit: true,
-      center: true,
+      fit: false,
+      center: false,
       mouseWheelZoomEnabled: true,
       preventMouseEventsDefault: false,
-      dblClickZoomEnabled: true,
       minZoom: 0.25,
       maxZoom: 10,
+      dblClickZoomEnabled: true
     });
     window.panZoomInstance = panZoom;
 
-    // initial fit to container
-    panZoom.resize();
-    panZoom.fit();
-    panZoom.center();
+    // Compute a safe initial scale and pan
+    const wRatio = container.clientWidth / vb.width;
+    const hRatio = container.clientHeight / vb.height;
+    const scale = Math.min(wRatio, hRatio);
+    if (isFinite(scale) && scale > 0) {
+      panZoom.zoom(scale);
+      panZoom.pan({
+        x: (container.clientWidth - vb.width * scale) / 2,
+        y: (container.clientHeight - vb.height * scale) / 2
+      });
+    }
   }
 
-  requestAnimationFrame(initWhenReady);
+  initPanZoom();
 });
 </script>
 
@@ -568,6 +580,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
