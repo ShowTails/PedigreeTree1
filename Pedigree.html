@@ -62,6 +62,13 @@ svg {
   margin: 0 auto;
   overflow: hidden;        /* keeps the SVG bounded visually */
 }
+    
+@media print {
+  #print-btn {
+    display: none !important;
+  }
+}
+    
   </style>
   
 </head>
@@ -730,6 +737,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
