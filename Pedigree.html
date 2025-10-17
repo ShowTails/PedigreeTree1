@@ -459,115 +459,40 @@ svg {
 <script src="pedigree.js"></script>
   
 <script src="https://unpkg.com/svg-pan-zoom/dist/svg-pan-zoom.js"></script>
-
-<!-- Activate zoom / pan -->
 <script>
 window.addEventListener("load", () => {
   const svg = document.getElementById("pedigree-svg");
   const container = document.getElementById("pedigree-container");
 
-  function safeInit() {
+  function initWhenReady() {
     const vb = svg.viewBox.baseVal;
     if (!vb || vb.width === 0 || vb.height === 0 || container.clientWidth === 0) {
-      // try again next frame until browser reports actual size
-      requestAnimationFrame(safeInit);
+      requestAnimationFrame(initWhenReady);
       return;
     }
 
-    // ✅ initialize only after real sizes exist
+    // initialize built-in pan/zoom handling
     const panZoom = svgPanZoom(svg, {
-      panEnabled: true,
       zoomEnabled: true,
+      panEnabled: true,
+      controlIconsEnabled: false,
+      fit: true,
+      center: true,
       mouseWheelZoomEnabled: true,
       preventMouseEventsDefault: false,
-      controlIconsEnabled: false,
-      fit: false,
-      center: false,
+      dblClickZoomEnabled: true,
       minZoom: 0.25,
       maxZoom: 10,
-      zoomScaleSensitivity: 0.2,
-      dblClickZoomEnabled: false
     });
     window.panZoomInstance = panZoom;
 
-    // fit logic (same as before)
-    const wR = container.clientWidth / vb.width;
-    const hR = container.clientHeight / vb.height;
-    const s = Math.min(wR, hR);
-    panZoom.zoom(s);
-    panZoom.pan({
-      x: (container.clientWidth - vb.width * s) / 2,
-      y: (container.clientHeight - vb.height * s) / 2
-    });
-
-    // pointer support (same as before)
-   const active = new Map();
-let lastDist = null;
-
-svg.addEventListener("pointerdown", e => {
-  svg.setPointerCapture(e.pointerId);
-  active.set(e.pointerId, { x: e.clientX, y: e.clientY });
-});
-
-svg.addEventListener("pointermove", e => {
-  if (!active.has(e.pointerId)) return;
-
-  const prev = active.get(e.pointerId);
-  const newPt = { x: e.clientX, y: e.clientY };
-  active.set(e.pointerId, newPt);
-
-  // One pointer: pan
-  if (active.size === 1) {
-    const dx = newPt.x - prev.x;
-    const dy = newPt.y - prev.y;
-
-    if (isFinite(dx) && isFinite(dy)) {
-      panZoom.panBy({ x: dx, y: dy });
-    }
-    return;
+    // initial fit to container
+    panZoom.resize();
+    panZoom.fit();
+    panZoom.center();
   }
 
-  // Two pointers: pinch zoom
-  if (active.size === 2) {
-    const pts = [...active.values()];
-    // Skip if any pointer lost coordinates
-    if (!isFinite(pts[0].x) || !isFinite(pts[0].y) || !isFinite(pts[1].x) || !isFinite(pts[1].y)) {
-      lastDist = null;
-      return;
-    }
-
-    const dx = pts[0].x - pts[1].x;
-    const dy = pts[0].y - pts[1].y;
-    const dist = Math.hypot(dx, dy);
-
-    if (isFinite(dist) && dist > 0) {
-      if (lastDist && isFinite(lastDist)) {
-        const scale = dist / lastDist;
-        if (isFinite(scale) && scale > 0) {
-          panZoom.zoomBy(scale);
-        }
-      }
-      lastDist = dist;
-    } else {
-      lastDist = null;
-    }
-  }
-});
-
-svg.addEventListener("pointerup", e => {
-  active.delete(e.pointerId);
-  if (active.size < 2) lastDist = null;
-});
-svg.addEventListener("pointercancel", e => active.delete(e.pointerId));
-
-    svg.addEventListener("dblclick", e => {
-      e.preventDefault();
-      safeInit(); // re-fit
-    });
-  }
-
-  // run once sizing is valid
-  requestAnimationFrame(safeInit);
+  requestAnimationFrame(initWhenReady);
 });
 </script>
 
@@ -643,6 +568,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
