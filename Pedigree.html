@@ -638,41 +638,47 @@ svg {
 </script>
 
 <script>
-/* === Print alignment + true 11-inch scaling (desktop + mobile safe) === */
+/* === True centered printing for both desktop and mobile === */
 (() => {
-  let savedPan, savedZoom;
+  const btn = document.getElementById("print-btn");
 
   function resetForPrint() {
     const inst = window.panZoomInstance;
     if (!inst) return;
-    savedPan = inst.getPan();
-    savedZoom = inst.getZoom();
 
-    // Reset to true scale and center before printing
+    // Save current transform
+    const saved = {
+      pan: inst.getPan(),
+      zoom: inst.getZoom()
+    };
+    window._savedTransform = saved;
+
+    // Reset everything so the pedigree is perfectly centered & scaled for print
     inst.resetZoom();
     inst.center();
 
-    // 1600 SVG units ≈ 11 inches (≈1056 px at 96 DPI)
+    // Match SVG width to 11" printable area (≈1056 px @ 96 DPI)
     const svgWidth = 1600;
     const targetPx = 1056;
     const scale = targetPx / svgWidth;
     inst.zoom(scale);
 
-    // Center perfectly for print frame
+    // Force the SVG to actually recalculate before printing
     inst.pan({ x: 0, y: 0 });
+    inst.updateBBox();
+    inst.resize();
   }
 
   function restoreAfterPrint() {
     const inst = window.panZoomInstance;
-    if (inst && savedZoom && savedPan) {
-      inst.zoom(savedZoom);
-      inst.pan(savedPan);
+    const saved = window._savedTransform;
+    if (inst && saved) {
+      inst.zoom(saved.zoom);
+      inst.pan(saved.pan);
     }
   }
 
-  const btn = document.getElementById('print-btn');
-
-  btn.addEventListener('click', () => {
+  btn.addEventListener("click", () => {
     const inst = window.panZoomInstance;
     if (!inst) {
       window.print();
@@ -681,27 +687,23 @@ svg {
 
     resetForPrint();
 
-    // ✅ Allow two browser frames for SVG transform to apply
+    // Let the browser render the new transform before printing
     requestAnimationFrame(() => {
-      inst.resize();      // Force svg-pan-zoom to recalc
-      inst.updateBBox();  // Flush its internal box cache
-
-      // Allow rendering time (mobile webviews need this)
       setTimeout(() => {
         window.print();
 
-        // Wait until after print preview closes
-        setTimeout(() => restoreAfterPrint(), 1500);
-      }, 400);
+        // Wait for print dialog to close, then restore position
+        setTimeout(restoreAfterPrint, 1000);
+      }, 300);
     });
   });
 
-  // Support native print dialog triggers (desktop browsers)
-  window.addEventListener('beforeprint', resetForPrint);
-  window.addEventListener('afterprint', restoreAfterPrint);
+  // Auto-reset when user prints via Ctrl+P or share sheet
+  window.addEventListener("beforeprint", resetForPrint);
+  window.addEventListener("afterprint", restoreAfterPrint);
 
-  // ✅ Auto-align on orientation change (mobile landscape/portrait)
-  window.addEventListener('orientationchange', () => {
+  // Fix mobile re-centering after orientation change
+  window.addEventListener("orientationchange", () => {
     const inst = window.panZoomInstance;
     if (inst) setTimeout(() => resetForPrint(), 600);
   });
@@ -737,6 +739,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
