@@ -543,7 +543,7 @@ function getParam(name) {
       // smoother in some webviews:
       onUpdatedCTM: function() {} // noop to avoid unnecessary animations
     });
-
+    window.panZoomInstance = panZoom; // ✅ make globally accessible
     fitToContainer();
     wirePointerHandlers();  // robust pan & pinch in tricky webviews
     wireWheelZoom();        // desktop wheel-zoom
@@ -653,59 +653,55 @@ function getParam(name) {
 })();
 </script>
 
+
 <script>
-/* === Guaranteed centered & scaled printing === */
+/* === Guaranteed centered & scaled printing using active zoom === */
 (() => {
   const btn = document.getElementById("print-btn");
   const svg = document.getElementById("pedigree-svg");
   const container = document.getElementById("pedigree-container");
 
-  function saveAndReset() {
-    // Save any inline transform the pan/zoom lib applied
-    window._savedTransform = svg.getAttribute("transform") || "";
-    const vb = svg.viewBox.baseVal;
+  function resetForPrint() {
+    const inst = window.panZoomInstance;
+    if (!inst) return;
 
-    // Fix the SVG’s physical size to match printable 11x8.5in area (landscape)
-    svg.setAttribute("width", "11in");
-    svg.setAttribute("height", "8.5in");
-    svg.style.width = "11in";
-    svg.style.height = "8.5in";
+    // Save current state
+    window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-    // Make sure viewBox origin is 0,0 and fits content
-    svg.setAttribute("viewBox", "0 0 1600 850");
+    // Center & scale pedigree to 11x8.5in area (≈1 : 1 fit)
+    inst.resetZoom();
+    inst.center();
 
-    // Remove any transform left by pan-zoom so it’s centered for print
-    svg.removeAttribute("transform");
+    // Calculate scale factor to match 11 in width (≈1056 px @ 96 DPI)
+    const svgWidth = 1600;
+    const targetPx = 1056;
+    const scale = targetPx / svgWidth;
+    inst.zoom(scale);
 
-    // Center it inside container for on-screen preview before print
-    container.style.display = "flex";
-    container.style.justifyContent = "center";
-    container.style.alignItems = "center";
+    // Make sure the SVG is fully within printable bounds
+    inst.pan({ x: 0, y: 0 });
   }
 
   function restoreAfterPrint() {
-    svg.setAttribute("width", "100%");
-    svg.setAttribute("height", "100%");
-    svg.style.width = "";
-    svg.style.height = "";
-    if (window._savedTransform)
-      svg.setAttribute("transform", window._savedTransform);
-    container.style.display = "";
-    container.style.justifyContent = "";
-    container.style.alignItems = "";
+    const inst = window.panZoomInstance;
+    const s = window._savedState;
+    if (inst && s) {
+      inst.zoom(s.zoom);
+      inst.pan(s.pan);
+    }
   }
 
   btn.addEventListener("click", () => {
-    saveAndReset();
+    resetForPrint();
     requestAnimationFrame(() => {
       setTimeout(() => {
         window.print();
-        setTimeout(restoreAfterPrint, 500);
+        setTimeout(restoreAfterPrint, 800);
       }, 200);
     });
   });
 
-  window.addEventListener("beforeprint", saveAndReset);
+  window.addEventListener("beforeprint", resetForPrint);
   window.addEventListener("afterprint", restoreAfterPrint);
 })();
 </script>
@@ -739,6 +735,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
