@@ -70,7 +70,21 @@ svg {
 }
     
   </style>
-  
+  <script>
+function getParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  const value = params.get(name) || '';
+  // Decode URL entities and escape HTML
+  return value
+    .replaceAll('+', ' ')
+    .replace(/%26/g, '&')
+    .replace(/%27/g, "'")
+    .replace(/%20/g, ' ')
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+</script>
 </head>
 <body>
   
@@ -466,21 +480,7 @@ svg {
 
 
 <!-- Your data/field logic -->
-<script>
-function getParam(name) {
-  const params = new URLSearchParams(window.location.search);
-  const value = params.get(name) || '';
-  // Decode URL entities and escape HTML
-  return value
-    .replaceAll('+', ' ')
-    .replace(/%26/g, '&')
-    .replace(/%27/g, "'")
-    .replace(/%20/g, ' ')
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-</script>
+
   
   <script src="pedigree.js"></script>
   
@@ -755,6 +755,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
