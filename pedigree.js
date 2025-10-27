@@ -2,36 +2,41 @@
 // Supports: data-field, data-chain (space separated), <img> + SVG <image>
 
 window.addEventListener('DOMContentLoaded', () => {
-  const params = new URLSearchParams(window.location.search);
+  // --- Safe parameter fetch that handles & and HTML escaping ---
+  function getParam(name) {
+    const params = new URLSearchParams(window.location.search);
+    const value = params.get(name) || '';
+    return decodeURIComponent(value)
+      .replaceAll('+', ' ')
+      .replace(/%26/g, '&')
+      .replace(/%27/g, "'")
+      .replace(/%20/g, ' ')
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
 
   // --- Handle single fields ---
   document.querySelectorAll('[data-field]').forEach(el => {
     const key = el.getAttribute('data-field');
-    const value = params.get(key);
+    const value = getParam(key);
     if (!value) return;
-
-    // Decode once, then clean up double encoding (e.g. %3A%2F)
-    const decoded = decodeURIComponent(value)
-      .replace(/%3A/g, ':')
-      .replace(/%2F/g, '/');
 
     // --- Handle image fields ---
     if (el.tagName === 'IMG' || el.tagName === 'IMAGE') {
-      // Set both SVG href and IMG src for cross-compatibility
-      el.setAttribute('href', decoded); // SVG <image>
-      el.src = decoded;                 // Standard <img>
-
-      console.log(`Loaded image for ${key}: ${decoded}`);
+      el.setAttribute('href', value); // SVG <image>
+      el.src = value;                 // Standard <img>
+      console.log(`Loaded image for ${key}: ${value}`);
     }
 
     // --- Handle HTML snippet fields (if Glide sends <img> tags) ---
     else if (key.toLowerCase().includes('html')) {
-      el.innerHTML = decoded;
+      el.innerHTML = value;
     }
 
     // --- Handle normal text fields ---
     else {
-      el.textContent = decoded;
+      el.textContent = value;
     }
   });
 
@@ -41,12 +46,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const parts = [];
 
     keys.forEach(key => {
-      const val = params.get(key);
-      if (val) parts.push(
-        decodeURIComponent(val)
-          .replace(/%3A/g, ':')
-          .replace(/%2F/g, '/')
-      );
+      const val = getParam(key);
+      if (val) parts.push(val);
     });
 
     if (parts.length > 0) {
