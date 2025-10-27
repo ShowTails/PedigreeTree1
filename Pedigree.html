@@ -61,6 +61,7 @@ svg {
   box-sizing: border-box;
   margin: 0 auto;
   overflow: hidden;        /* keeps the SVG bounded visually */
+       background-color: white; /* Prevent transparent background prints */
 }
     
 @media print {
@@ -68,7 +69,46 @@ svg {
     display: none !important;
   }
 }
-    
+
+    @page {
+  size: 11in 8.5in landscape;
+  margin: 0;
+}
+
+   @media print {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 11in !important;
+    height: 8.5in !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  #pedigree-container {
+    width: 11in !important;
+    height: 8.5in !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  svg {
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+  }
+
+  #print-btn,
+  #reset-view-btn {
+    display: none !important;
+  }
+}
+ 
   </style>
   <script>
 function getParam(name) {
@@ -735,6 +775,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
