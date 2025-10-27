@@ -75,31 +75,29 @@ svg {
   margin: 0;
 }
 
-   @media print {
+    @media print {
   html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 11in !important;
-    height: 8.5in !important;
-    overflow: visible !important;
-    background: white !important;
+    width: 11in;
+    height: 8.5in;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    background: white;
   }
 
   #pedigree-container {
-    width: 11in !important;
-    height: 8.5in !important;
-    max-width: none !important;
-    max-height: none !important;
-    margin: 0 auto !important;
-    overflow: visible !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
+    width: 11in;
+    height: 8.5in;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible;
   }
 
   svg {
-    width: 100% !important;
-    height: 100% !important;
+    width: 11in !important;
+    height: 8.5in !important;
     transform: none !important;
   }
 
@@ -108,6 +106,7 @@ svg {
     display: none !important;
   }
 }
+
  
   </style>
   <script>
@@ -129,7 +128,8 @@ function getParam(name) {
 <body>
   
   <div id="pedigree-container">
-<svg id="pedigree-svg" viewBox="0 0 1600 850">
+<svg id="pedigree-svg" viewBox="0 0 1600 850" width="11in" height="8.5in" preserveAspectRatio="xMidYMid meet">
+
 
     <image id="logo" x="40" y="-100" width="120" height="120" preserveAspectRatio="xMinYMin meet"></image>
     <g transform="translate(155,30)">
@@ -713,10 +713,10 @@ function getParam(name) {
     inst.center();
 
     // Calculate scale factor to match 11 in width (≈1056 px @ 96 DPI)
-    const svgWidth = 1600;
-    const targetPx = 1056;
-    const scale = targetPx / svgWidth;
-    inst.zoom(scale);
+  // const svgWidth = 1600;
+   // const targetPx = 1056;
+   // const scale = targetPx / svgWidth;
+    // inst.zoom(scale);
 
     // Make sure the SVG is fully within printable bounds
     inst.pan({ x: 0, y: 0 });
@@ -775,6 +775,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
