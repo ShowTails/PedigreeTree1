@@ -718,7 +718,7 @@ function resetForPrint() {
   inst.center();
 
     // ⬆️ Slight zoom-in for print (adjust multiplier as needed)
-  const zoomFactor = 1.15; // 1.0 = 100%, 1.15 = 15% closer, 1.25 = 25% closer
+  const zoomFactor = 1.40; // 1.0 = 100%, 1.15 = 15% closer, 1.25 = 25% closer
   inst.zoom(inst.getZoom() * zoomFactor);
 
   // Apply small positioning offset for print alignment
@@ -780,6 +780,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
