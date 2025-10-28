@@ -71,6 +71,7 @@
       background: white;
     }
 
+    /* Center the pedigree on the page */
     #pedigree-container {
       width: 11in;
       height: 8.5in;
@@ -80,6 +81,8 @@
       align-items: center;
       overflow: visible;
       position: relative;
+      border: 1px solid #cccccc; /* ✅ faint gray border for print test */
+      box-sizing: border-box;
     }
 
     svg {
@@ -89,6 +92,7 @@
       max-height: 8.5in !important;
       transform: none !important;
       margin: 0 auto !important;
+      background: white !important;
     }
 
     #print-btn,
@@ -97,6 +101,7 @@
     }
   }
 </style>
+
 
   <script>
 function getParam(name) {
@@ -765,6 +770,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
