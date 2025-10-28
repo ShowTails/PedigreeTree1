@@ -6,116 +6,98 @@
    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   
   <title>4-Generation Rabbit Pedigree</title>
-  <style>
-
-    body, html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;        /* no visible scroll bars */
-}
-
-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  user-select: none;
-  cursor: grab;
-  -webkit-user-drag: none;
-  touch-action: none;      /* let pan/zoom library handle gestures */
-}
-    .box {
-      width: 220px;
-      height: 125px;
-      rx: 10;
-      ry: 10;
-      stroke: black;
-      stroke-width: 1.5;
-      fill: white;
-    }
-    .male {
-      fill: #cce5ff; /* light blue */
-    }
-    .female {
-      fill: #f8d7da; /* light pink */
-    }
-    text {
-      font-size: 14px;
-      font-family: Arial, sans-serif;
-    }
-    .name {
-      font-weight: bold;
-      font-size: 16px;
-    }
-  .title {
-      font-weight: bold;
-      font-size: 20px;
-    }
-
-    #pedigree-container {
-  width: 100vw;
-  height: 100vh;
-  max-width: 11in;
-  max-height: 8.5in;
-  box-sizing: border-box;
-  margin: 0 auto;
-  overflow: hidden;        /* keeps the SVG bounded visually */
-       background-color: white; /* Prevent transparent background prints */
-}
-    
-@media print {
-  #print-btn {
-    display: none !important;
-  }
-}
-
-    @page {
-  size: 11in 8.5in landscape;
-  margin: 0;
-}
-
-    @media print {
+<style>
   html, body {
-    width: 11in;
-    height: 8.5in;
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     background: white;
   }
 
-   #pedigree-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
+  #pedigree-container {
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    margin: 0 auto;
     overflow: hidden;
+    background: white;
   }
 
   svg {
-    width: 100% !important;
-    height: 100% !important;
-    transform: none !important;
-    viewBox: 0 0 1600 850;
-    preserveAspectRatio: xMidYMid meet;
-    margin: -0.25in auto;
-padding: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    user-select: none;
+    cursor: grab;
+    -webkit-user-drag: none;
+    touch-action: none;
   }
 
-  #print-btn,
-  #reset-view-btn {
-    display: none !important;
+  .box {
+    width: 220px;
+    height: 125px;
+    rx: 10;
+    ry: 10;
+    stroke: black;
+    stroke-width: 1.5;
+    fill: white;
   }
-}
 
- 
-  </style>
+  .male { fill: #cce5ff; }
+  .female { fill: #f8d7da; }
+
+  text {
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+  }
+
+  .name { font-weight: bold; font-size: 16px; }
+  .title { font-weight: bold; font-size: 20px; }
+
+  @page {
+    size: 11in 8.5in landscape;
+    margin: 0;
+  }
+
+  @media print {
+    html, body {
+      width: 11in;
+      height: 8.5in;
+      margin: 0;
+      padding: 0;
+      overflow: visible;
+      background: white;
+    }
+
+    #pedigree-container {
+      width: 11in;
+      height: 8.5in;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: visible;
+      position: relative;
+    }
+
+    svg {
+      width: 11in !important;
+      height: 8.5in !important;
+      max-width: 11in !important;
+      max-height: 8.5in !important;
+      transform: none !important;
+      margin: 0 auto !important;
+    }
+
+    #print-btn,
+    #reset-view-btn {
+      display: none !important;
+    }
+  }
+</style>
+
   <script>
 function getParam(name) {
   const params = new URLSearchParams(window.location.search);
@@ -783,6 +765,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
