@@ -706,26 +706,22 @@ function getParam(name) {
   const svg = document.getElementById("pedigree-svg");
   const container = document.getElementById("pedigree-container");
 
-  function resetForPrint() {
-    const inst = window.panZoomInstance;
-    if (!inst) return;
+function resetForPrint() {
+  const inst = window.panZoomInstance;
+  if (!inst) return;
 
-    // Save current state
-    window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
+  // Save current state
+  window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-    // Center & scale pedigree to 11x8.5in area (≈1 : 1 fit)
-    inst.resetZoom();
-    inst.center();
+  // Reset to full view
+  inst.resetZoom();
+  inst.center();
 
-    // Calculate scale factor to match 11 in width (≈1056 px @ 96 DPI)
-  // const svgWidth = 1600;
-   // const targetPx = 1056;
-   // const scale = targetPx / svgWidth;
-    // inst.zoom(scale);
+  // Apply small positioning offset for print alignment
+  // Adjust these numbers as needed (x moves right, y moves down)
+  inst.panBy({ x: -80, y: -60 });
+}
 
-    // Make sure the SVG is fully within printable bounds
-    inst.pan({ x: 0, y: 0 });
-  }
 
   function restoreAfterPrint() {
     const inst = window.panZoomInstance;
@@ -780,6 +776,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
