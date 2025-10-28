@@ -29,9 +29,10 @@
 
 svg {
   display: block;
-  width: 10.8in !important;     /* slightly under full width to stay on one page */
-  height: auto !important;       /* scale height proportionally */
-  max-height: 8.3in !important;  /* ensure it fits within page bounds */
+  width: 100% !important;     /* slightly under full width to stay on one page */
+  height: 100% !important;       /* scale height proportionally */
+  max-height: 8.3in !important;
+  max-width: 11.5in !important;  /* ensure it fits within page bounds */
   transform: none !important;
   margin: 0.1in auto 0 !important;
   background: white !important;
@@ -89,10 +90,12 @@ svg {
 
 svg {
   width: 10.8in !important;
-  height: auto !important;
+  height: 8.3in !important;
   transform: none !important;
-  background: white;
+  background: white !important;
+  margin: 0 auto !important;
 }
+
 
 
 
@@ -777,6 +780,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
