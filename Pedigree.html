@@ -718,12 +718,12 @@ function resetForPrint() {
   inst.center();
 
     // ⬆️ Slight zoom-in for print (adjust multiplier as needed)
-  const zoomFactor = 1.25; // 1.0 = 100%, 1.15 = 15% closer, 1.25 = 25% closer
+  const zoomFactor = 1.35; // 1.0 = 100%, 1.15 = 15% closer, 1.25 = 25% closer
   inst.zoom(inst.getZoom() * zoomFactor);
 
   // Apply small positioning offset for print alignment
   // Adjust these numbers as needed (x moves right, y moves down)
-  inst.panBy({ x: -70, y: -60 });
+  inst.panBy({ x: -30, y: -20 });
 }
 
 
@@ -780,6 +780,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
