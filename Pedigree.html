@@ -85,16 +85,17 @@
       box-sizing: border-box;
     }
 
-    svg {
-      width: 11in !important;
-      height: 8.5in !important;
-      max-width: 11in !important;
-      max-height: 8.5in !important;
-      transform: scale(1.35) translateY(0.2in) !important;
-transform-origin: center center !important;
-      margin: 0 auto !important;
-      background: white !important;
-    }
+   svg {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 11in !important;
+  max-height: 8.5in !important;
+  aspect-ratio: 1600 / 850 !important;
+  transform: none !important;
+  margin: 0 auto !important;
+  background: white !important;
+}
+
 
     #print-btn,
     #reset-view-btn {
@@ -771,6 +772,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
