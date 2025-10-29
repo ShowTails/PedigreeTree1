@@ -639,6 +639,7 @@ function getParam(name) {
     svg.addEventListener(
       "touchstart",
       (e) => {
+        e.preventDefault();   // stop Glide webview from intercepting pinch
         if (e.touches.length === 2) {
           pinchActive = true;
           lastDistance = Math.hypot(
@@ -737,7 +738,17 @@ function resetForPrint() {
   }
 
   btn.addEventListener("click", () => {
+     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    
     resetForPrint();
+
+      if (isMobile) {
+    setTimeout(() => {
+      window.print();
+      // restore after 3 seconds to allow the print dialog to close
+      setTimeout(restoreAfterPrint, 3000);
+    }, 600);
+  } else {
     requestAnimationFrame(() => {
       setTimeout(() => {
         window.print();
@@ -780,6 +791,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
