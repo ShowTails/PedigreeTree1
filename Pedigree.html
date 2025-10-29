@@ -702,34 +702,30 @@ function getParam(name) {
 })();
 </script>
 
-
 <script>
 /* === Guaranteed centered & scaled printing using active zoom === */
 (() => {
   const btn = document.getElementById("print-btn");
   const svg = document.getElementById("pedigree-svg");
-  const container = document.getElementById("pedigree-container");
 
-function resetForPrint() {
-  const inst = window.panZoomInstance;
-  if (!inst) return;
+  function resetForPrint() {
+    const inst = window.panZoomInstance;
+    if (!inst) return;
 
-  // Save current state
-  window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
+    // Save current state
+    window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-  // Reset to full view
-  inst.resetZoom();
-  inst.center();
+    // Reset to full view and center
+    inst.resetZoom();
+    inst.center();
 
-    // ⬆️ Slight zoom-in for print (adjust multiplier as needed)
-  const zoomFactor = 1.5; // 1.0 = 100%, 1.15 = 15% closer, 1.25 = 25% closer
-  inst.zoom(inst.getZoom() * zoomFactor);
+    // Slight zoom-in for print (adjust multiplier as needed)
+    const zoomFactor = 1.5;
+    inst.zoom(inst.getZoom() * zoomFactor);
 
-  // Apply small positioning offset for print alignment
-  // Adjust these numbers as needed (x moves right, y moves down)
-  inst.panBy({ x: 0, y: 180 });
-}
-
+    // Offset to align for print
+    inst.panBy({ x: 0, y: 180 });
+  }
 
   function restoreAfterPrint() {
     const inst = window.panZoomInstance;
@@ -740,28 +736,29 @@ function resetForPrint() {
     }
   }
 
-  btn.addEventListener("click", () => {
-     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    
-    resetForPrint();
-
-      if (isMobile) {
-    setTimeout(() => {
-      window.print();
-      // restore after 3 seconds to allow the print dialog to close
-      setTimeout(restoreAfterPrint, 3000);
-    }, 600);
-  } else {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        window.print();
-        setTimeout(restoreAfterPrint, 800);
-      }, 200);
-    });
-  });
-
+  // 🔹 Register global print event listeners immediately
   window.addEventListener("beforeprint", resetForPrint);
   window.addEventListener("afterprint", restoreAfterPrint);
+
+  // 🔹 Print button click
+  btn.addEventListener("click", () => {
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    resetForPrint();
+
+    if (isMobile) {
+      setTimeout(() => {
+        window.print();
+        setTimeout(restoreAfterPrint, 3000);
+      }, 600);
+    } else {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.print();
+          setTimeout(restoreAfterPrint, 800);
+        }, 200);
+      });
+    }
+  });
 })();
 </script>
 
@@ -794,6 +791,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
