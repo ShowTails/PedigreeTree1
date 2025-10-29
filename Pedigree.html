@@ -37,6 +37,8 @@ svg {
   margin: 0.1in auto 0 !important;
   background: white !important;
   page-break-inside: avoid !important;
+    touch-action: none !important;       
+  -ms-touch-action: none !important;   
 }
 
 
@@ -639,8 +641,9 @@ function getParam(name) {
     svg.addEventListener(
       "touchstart",
       (e) => {
-        e.preventDefault();   // stop Glide webview from intercepting pinch
+       
         if (e.touches.length === 2) {
+           e.preventDefault();   // stop Glide webview from intercepting pinch
           pinchActive = true;
           lastDistance = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
@@ -791,6 +794,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
