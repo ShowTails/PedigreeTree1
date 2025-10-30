@@ -708,24 +708,33 @@ function enablePinchZoom() {
   const btn = document.getElementById("print-btn");
   const svg = document.getElementById("pedigree-svg");
 
-  function resetForPrint() {
-    const inst = window.panZoomInstance;
-    if (!inst) return;
+function resetForPrint() {
+  const inst = window.panZoomInstance;
+  if (!inst) return;
 
-    // Save current state
-    window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
+  // Save current state (for restoring later)
+  window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-    // Reset to full view and center
-    inst.resetZoom();
-    inst.center();
+  // Force a full reset — always start from original centered view
+  inst.resetZoom();
+  inst.center();
 
-    // Slight zoom-in for print (adjust multiplier as needed)
-    const zoomFactor = 1.5;
-    inst.zoom(inst.getZoom() * zoomFactor);
+  // For mobile: manually force viewBox to ensure proper centering
+  const svg = document.getElementById("pedigree-svg");
+  svg.setAttribute("viewBox", "-80 -120 1750 1450"); // 👈 match your true design size
 
-    // Offset to align for print
-    inst.panBy({ x: 0, y: 180 });
+  // Apply a zoom factor to fill printable area
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  const zoomFactor = isMobile ? 1.6 : 1.45;
+  inst.zoom(zoomFactor);
+
+  // Adjust pan slightly to center vertically in landscape
+  if (isMobile) {
+    inst.pan({ x: 0, y: 150 });
+  } else {
+    inst.pan({ x: 0, y: 180 });
   }
+}
 
   function restoreAfterPrint() {
     const inst = window.panZoomInstance;
@@ -791,6 +800,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
