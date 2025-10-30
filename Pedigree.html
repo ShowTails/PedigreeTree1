@@ -592,6 +592,8 @@ function getParam(name) {
     });
     window.panZoomInstance = panZoom; // ✅ make globally accessible
     fitToContainer();
+    enablePointerPan();    
+    enablePinchZoom();     
     wirePointerHandlers();  // robust pan & pinch in tricky webviews
     wireWheelZoom();        // desktop wheel-zoom
     initialized = true;
@@ -634,55 +636,53 @@ function getParam(name) {
   }
 
   // === Two-finger pinch zoom for mobile ===
-  function enablePinchZoom() {
-    let pinchActive = false;
-    let lastDistance = null;
+function enablePinchZoom() {
+  let pinchStart = null;
+  let startZoom = 1;
 
-    svg.addEventListener(
-      "touchstart",
-      (e) => {
-       
-        if (e.touches.length === 2) {
-           e.preventDefault();   // stop Glide webview from intercepting pinch
-          pinchActive = true;
-          lastDistance = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
-        }
-      },
-      { passive: false }
-    );
+  svg.addEventListener(
+    "touchstart",
+    (e) => {
+      if (e.touches.length === 2 && window.panZoomInstance) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        pinchStart = Math.hypot(dx, dy);
+        startZoom = window.panZoomInstance.getZoom();
+      }
+    },
+    { passive: false }
+  );
 
-    svg.addEventListener(
-      "touchmove",
-      (e) => {
-        if (pinchActive && e.touches.length === 2 && panZoom) {
-          e.preventDefault();
-          const newDistance = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
-          const scale = newDistance / lastDistance;
-          if (isFinite(scale) && scale > 0 && scale !== 1) {
-            const rect = svg.getBoundingClientRect();
-            const mid = {
-              x: (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left,
-              y: (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top,
-            };
-            panZoom.zoomAtPoint(scale, mid);
-          }
-          lastDistance = newDistance;
-        }
-      },
-      { passive: false }
-    );
+  svg.addEventListener(
+    "touchmove",
+    (e) => {
+      if (e.touches.length === 2 && window.panZoomInstance && pinchStart) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const pinchNow = Math.hypot(dx, dy);
+        const zoomRatio = pinchNow / pinchStart;
 
-    svg.addEventListener("touchend", () => {
-      pinchActive = false;
-      lastDistance = null;
-    });
-  }
+        // Get midpoint between fingers
+        const rect = svg.getBoundingClientRect();
+        const mid = {
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top,
+        };
+
+        // Apply smooth, relative zoom like Google Maps
+        window.panZoomInstance.zoomAtPoint(startZoom * zoomRatio, mid);
+      }
+    },
+    { passive: false }
+  );
+
+  svg.addEventListener("touchend", () => {
+    pinchStart = null;
+  });
+}
+
 
   // === Refit on resize or visibility changes ===
   const ro = new ResizeObserver(() => {
@@ -791,6 +791,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
