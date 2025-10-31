@@ -702,39 +702,47 @@ function enablePinchZoom() {
 })();
 </script>
 
-<script>
+  
 /* === Guaranteed centered & scaled printing using active zoom === */
+<script>
 (() => {
   const btn = document.getElementById("print-btn");
   const svg = document.getElementById("pedigree-svg");
 
-function resetForPrint() {
-  const inst = window.panZoomInstance;
-  if (!inst) return;
+  function resetForPrint() {
+    const inst = window.panZoomInstance;
+    if (!inst) return;
 
-  // Save current state (for restoring later)
-  window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
+    // Save current state for restore
+    window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-  // Force a full reset — always start from original centered view
-  inst.resetZoom();
-  inst.center();
+    // Reset and center before print
+    inst.resetZoom();
+    inst.center();
 
-  // For mobile: manually force viewBox to ensure proper centering
-  const svg = document.getElementById("pedigree-svg");
-  svg.setAttribute("viewBox", "-80 -120 1750 1450"); // 👈 match your true design size
+    // Standardize viewBox (so mobile knows true page bounds)
+    svg.setAttribute("viewBox", "-80 -120 1750 1450");
 
-  // Apply a zoom factor to fill printable area
-  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  const zoomFactor = isMobile ? 1.6 : 1.45;
-  inst.zoom(zoomFactor);
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-  // Adjust pan slightly to center vertically in landscape
-  if (isMobile) {
-    inst.pan({ x: 0, y: 150 });
-  } else {
-    inst.pan({ x: 0, y: 180 });
+    if (isMobile) {
+      // 🔹 Force full-page scaling for mobile
+      document.body.style.width = "11in";
+      document.body.style.height = "8.5in";
+      document.body.style.transformOrigin = "top left";
+      document.body.style.transform = "scale(1.6)";
+      document.body.style.margin = "0";
+      document.body.style.padding = "0";
+      document.body.style.overflow = "hidden";
+
+      inst.zoom(1.55);
+      inst.pan({ x: 20, y: 150 });
+    } else {
+      // 🔹 Desktop normal print settings
+      inst.zoom(1.45);
+      inst.pan({ x: 0, y: 180 });
+    }
   }
-}
 
   function restoreAfterPrint() {
     const inst = window.panZoomInstance;
@@ -743,30 +751,27 @@ function resetForPrint() {
       inst.zoom(s.zoom);
       inst.pan(s.pan);
     }
+
+    // remove any forced mobile overrides
+    document.body.style.transform = "";
+    document.body.style.width = "";
+    document.body.style.height = "";
+    document.body.style.overflow = "";
   }
 
-  // 🔹 Register global print event listeners immediately
   window.addEventListener("beforeprint", resetForPrint);
   window.addEventListener("afterprint", restoreAfterPrint);
 
-  // 🔹 Print button click
   btn.addEventListener("click", () => {
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
     resetForPrint();
 
-    if (isMobile) {
-      setTimeout(() => {
-        window.print();
-        setTimeout(restoreAfterPrint, 3000);
-      }, 600);
-    } else {
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          window.print();
-          setTimeout(restoreAfterPrint, 800);
-        }, 200);
-      });
-    }
+    // Give browsers time to repaint before print dialog opens
+    setTimeout(() => {
+      window.print();
+      // restore view after a short delay
+      setTimeout(restoreAfterPrint, isMobile ? 3000 : 800);
+    }, 400);
   });
 })();
 </script>
@@ -800,6 +805,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
