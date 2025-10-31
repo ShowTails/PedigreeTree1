@@ -703,8 +703,9 @@ function enablePinchZoom() {
 </script>
 
   
-/* === Guaranteed centered & scaled printing using active zoom === */
+
 <script>
+  /* === Guaranteed centered & scaled printing using active zoom === */
 (() => {
   const btn = document.getElementById("print-btn");
   const svg = document.getElementById("pedigree-svg");
@@ -713,32 +714,32 @@ function enablePinchZoom() {
     const inst = window.panZoomInstance;
     if (!inst) return;
 
-    // Save current state for restore
+    // Save current state
     window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-    // Reset and center before print
+    // Reset to full view and center
     inst.resetZoom();
     inst.center();
 
-    // Standardize viewBox (so mobile knows true page bounds)
+    // Normalize viewBox (critical for correct scaling)
     svg.setAttribute("viewBox", "-80 -120 1750 1450");
 
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
     if (isMobile) {
-      // 🔹 Force full-page scaling for mobile
+      // Force layout to 11x8.5 landscape area
       document.body.style.width = "11in";
       document.body.style.height = "8.5in";
       document.body.style.transformOrigin = "top left";
-      document.body.style.transform = "scale(1.6)";
+      document.body.style.transform = "scale(1.55)";
       document.body.style.margin = "0";
       document.body.style.padding = "0";
       document.body.style.overflow = "hidden";
 
-      inst.zoom(1.55);
-      inst.pan({ x: 20, y: 150 });
+      // Zoom/pan to best fill the frame
+      inst.zoom(1.6);
+      inst.pan({ x: 20, y: 140 });
     } else {
-      // 🔹 Desktop normal print settings
       inst.zoom(1.45);
       inst.pan({ x: 0, y: 180 });
     }
@@ -752,26 +753,31 @@ function enablePinchZoom() {
       inst.pan(s.pan);
     }
 
-    // remove any forced mobile overrides
+    // Clear mobile overrides
     document.body.style.transform = "";
     document.body.style.width = "";
     document.body.style.height = "";
     document.body.style.overflow = "";
   }
 
+  // Register event hooks globally
   window.addEventListener("beforeprint", resetForPrint);
   window.addEventListener("afterprint", restoreAfterPrint);
 
+  // Main click handler
   btn.addEventListener("click", () => {
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
     resetForPrint();
 
-    // Give browsers time to repaint before print dialog opens
-    setTimeout(() => {
-      window.print();
-      // restore view after a short delay
-      setTimeout(restoreAfterPrint, isMobile ? 3000 : 800);
-    }, 400);
+    // ✅ Wait for layout repaint (critical fix)
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        window.print();
+
+        // Restore after delay — longer for mobile
+        setTimeout(restoreAfterPrint, isMobile ? 3500 : 800);
+      }, isMobile ? 1200 : 200);
+    });
   });
 })();
 </script>
@@ -805,6 +811,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
