@@ -710,78 +710,90 @@ function enablePinchZoom() {
   const btn = document.getElementById("print-btn");
   const svg = document.getElementById("pedigree-svg");
 
-  function resetForPrint() {
+  function resetForPrintDesktop() {
     const inst = window.panZoomInstance;
     if (!inst) return;
 
-    // Save current state
     window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-    // Reset to full view and center
+    // Perfect desktop alignment values you confirmed earlier
     inst.resetZoom();
     inst.center();
-
-    // Normalize viewBox (critical for correct scaling)
     svg.setAttribute("viewBox", "-80 -120 1750 1450");
-
-    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
-    if (isMobile) {
-      // Force layout to 11x8.5 landscape area
-      document.body.style.width = "11in";
-      document.body.style.height = "8.5in";
-      document.body.style.transformOrigin = "top left";
-      document.body.style.transform = "scale(1.55)";
-      document.body.style.margin = "0";
-      document.body.style.padding = "0";
-      document.body.style.overflow = "hidden";
-
-      // Zoom/pan to best fill the frame
-      inst.zoom(1.6);
-      inst.pan({ x: 20, y: 140 });
-    } else {
-      inst.zoom(1.45);
-      inst.pan({ x: 0, y: 180 });
-    }
+    inst.zoom(1.45);
+    inst.pan({ x: 0, y: 180 });
   }
 
-  function restoreAfterPrint() {
+  function restoreAfterPrintDesktop() {
     const inst = window.panZoomInstance;
     const s = window._savedState;
     if (inst && s) {
       inst.zoom(s.zoom);
       inst.pan(s.pan);
     }
-
-    // Clear mobile overrides
-    document.body.style.transform = "";
-    document.body.style.width = "";
-    document.body.style.height = "";
-    document.body.style.overflow = "";
   }
 
-  // Register event hooks globally
-  window.addEventListener("beforeprint", resetForPrint);
-  window.addEventListener("afterprint", restoreAfterPrint);
+  function openMobilePrintClone() {
+    const svgContent = document.getElementById("pedigree-container").innerHTML;
+    const win = window.open("", "_blank");
+    if (!win) {
+      alert("Please allow pop-ups to print pedigree.");
+      return;
+    }
 
-  // Main click handler
+    // Build a full landscape print-ready document
+    win.document.write(`
+      <html>
+        <head>
+          <title>Print Pedigree</title>
+          <style>
+            @page { size: 11in 8.5in landscape; margin: 0; }
+            html, body {
+              width: 11in;
+              height: 8.5in;
+              margin: 0;
+              padding: 0;
+              background: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            svg {
+              width: 10.8in;
+              height: 8.3in;
+            }
+          </style>
+        </head>
+        <body>${svgContent}</body>
+      </html>
+    `);
+    win.document.close();
+
+    // Wait a moment for layout, then print and close
+    setTimeout(() => {
+      win.focus();
+      win.print();
+      setTimeout(() => win.close(), 1000);
+    }, 400);
+  }
+
   btn.addEventListener("click", () => {
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    resetForPrint();
 
-    // ✅ Wait for layout repaint (critical fix)
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        window.print();
-
-        // Restore after delay — longer for mobile
-        setTimeout(restoreAfterPrint, isMobile ? 3500 : 800);
-      }, isMobile ? 1200 : 200);
-    });
+    if (isMobile) {
+      openMobilePrintClone();
+    } else {
+      resetForPrintDesktop();
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.print();
+          setTimeout(restoreAfterPrintDesktop, 800);
+        }, 200);
+      });
+    }
   });
 })();
 </script>
-
   
   
   <script>
@@ -811,6 +823,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
