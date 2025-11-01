@@ -754,15 +754,20 @@ function enablePinchZoom() {
 
   btn.addEventListener("click", (event) => {
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (!isMobile) return; // only use this patch for mobile
+    if (!isMobile) return; // only affects mobile
 
     event.preventDefault();
 
     const container = document.getElementById("pedigree-container");
     if (!container) return;
 
-    // Extract current SVG and wrap it in a print-ready layout
-    const svgContent = container.innerHTML;
+    // Grab the current SVG markup
+    const svgMarkup = container.innerHTML;
+
+    // Also grab all styles from the main document
+    const styleBlocks = Array.from(document.querySelectorAll('style'))
+      .map(styleEl => styleEl.outerHTML)
+      .join('\n');
 
     const popup = window.open("", "_blank", "width=1200,height=800");
     if (!popup) {
@@ -775,6 +780,7 @@ function enablePinchZoom() {
         <head>
           <title>Print Pedigree</title>
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          ${styleBlocks}
           <style>
             @page { size: landscape; margin: 0; }
             html, body {
@@ -788,26 +794,25 @@ function enablePinchZoom() {
               justify-content: center;
             }
             svg {
-              width: 10.8in;
-              height: 8.3in;
+              width: 10.8in !important;
+              height: 8.3in !important;
+              background: white !important;
               margin: auto;
               display: block;
-              background: white;
             }
           </style>
         </head>
-        <body>${svgContent}</body>
+        <body>${svgMarkup}</body>
       </html>
     `);
     popup.document.close();
 
-    // Wait for rendering before triggering print
+    // Wait for the SVG to render, then open print dialog
     setTimeout(() => {
       popup.focus();
       popup.print();
-      // Auto-close popup once printing starts
       setTimeout(() => popup.close(), 1500);
-    }, 400);
+    }, 600);
   });
 })();
 </script>
@@ -840,6 +845,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
