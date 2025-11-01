@@ -744,42 +744,70 @@ function enablePinchZoom() {
   });
 })();
 </script>
-  
+
+   
   <script>
+      /* === Mobile Print === */
 (function() {
   const btn = document.getElementById("print-btn");
   if (!btn) return;
 
-  btn.addEventListener("click", () => {
+  btn.addEventListener("click", (event) => {
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (!isMobile) return; // only run this path on mobile
+    if (!isMobile) return; // only use this patch for mobile
 
-    const inst = window.panZoomInstance;
-    const svg = document.getElementById("pedigree-svg");
-    if (!inst || !svg) return;
+    event.preventDefault();
 
-    // Save user’s current view
-    window._savedMobileState = { pan: inst.getPan(), zoom: inst.getZoom() };
+    const container = document.getElementById("pedigree-container");
+    if (!container) return;
 
-    // Reset to full view
-    inst.resetZoom();
-    inst.center();
-    svg.setAttribute("viewBox", "-80 -120 1750 1450");
+    // Extract current SVG and wrap it in a print-ready layout
+    const svgContent = container.innerHTML;
 
-    // Slight zoom-in and center shift for mobile print scale
-    inst.zoom(1.85);              // ↑ adjust if still small (try 1.9–2.0)
-    inst.pan({ x: 0, y: 160 });   // vertical offset fine-tunes centering
+    const popup = window.open("", "_blank", "width=1200,height=800");
+    if (!popup) {
+      alert("Please allow pop-ups for ShowTails to print pedigrees.");
+      return;
+    }
 
-    // Wait for the layout to repaint before invoking print
+    popup.document.write(`
+      <html>
+        <head>
+          <title>Print Pedigree</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            @page { size: landscape; margin: 0; }
+            html, body {
+              width: 11in;
+              height: 8.5in;
+              margin: 0;
+              padding: 0;
+              background: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            svg {
+              width: 10.8in;
+              height: 8.3in;
+              margin: auto;
+              display: block;
+              background: white;
+            }
+          </style>
+        </head>
+        <body>${svgContent}</body>
+      </html>
+    `);
+    popup.document.close();
+
+    // Wait for rendering before triggering print
     setTimeout(() => {
-      window.print();
-
-      // Restore after 3 s once the print dialog is dismissed
-      setTimeout(() => {
-        inst.zoom(window._savedMobileState.zoom);
-        inst.pan(window._savedMobileState.pan);
-      }, 3000);
-    }, 1000); // 1 s stabilization delay so browser applies transform
+      popup.focus();
+      popup.print();
+      // Auto-close popup once printing starts
+      setTimeout(() => popup.close(), 1500);
+    }, 400);
   });
 })();
 </script>
@@ -812,6 +840,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
