@@ -87,7 +87,7 @@ svg {
   justify-content: center;
   margin: 0;
   padding: 0;
-  background: hidden;
+  background: white;
 }
 
 svg {
@@ -107,10 +107,6 @@ svg {
     }
   }
 
-  #pedigree-svg {
-  background: white;
-  overflow: visible;
-}
 </style>
 
 
@@ -708,23 +704,22 @@ function enablePinchZoom() {
   /* === Guaranteed centered & scaled printing using active zoom === */
 (() => {
   const btn = document.getElementById("print-btn");
-  const svg = document.getElementById("pedigree-svg");
 
-  function resetForPrintDesktop() {
+  function resetForPrint() {
     const inst = window.panZoomInstance;
     if (!inst) return;
 
+    // Save current zoom/pan so we can restore later
     window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-    // Perfect desktop alignment values you confirmed earlier
+    // Reset to full view, center, and apply perfect print scale
     inst.resetZoom();
     inst.center();
-    svg.setAttribute("viewBox", "-80 -120 1750 1450");
     inst.zoom(1.45);
     inst.pan({ x: 0, y: 180 });
   }
 
-  function restoreAfterPrintDesktop() {
+  function restoreAfterPrint() {
     const inst = window.panZoomInstance;
     const s = window._savedState;
     if (inst && s) {
@@ -733,64 +728,19 @@ function enablePinchZoom() {
     }
   }
 
-  function openMobilePrintClone() {
-    const svgContent = document.getElementById("pedigree-container").innerHTML;
-    const win = window.open("", "_blank");
-    if (!win) {
-      alert("Please allow pop-ups to print pedigree.");
-      return;
-    }
+  // Hook into browser print lifecycle
+  window.addEventListener("beforeprint", resetForPrint);
+  window.addEventListener("afterprint", restoreAfterPrint);
 
-    // Build a full landscape print-ready document
-    win.document.write(`
-      <html>
-        <head>
-          <title>Print Pedigree</title>
-          <style>
-            @page { size: 11in 8.5in landscape; margin: 0; }
-            html, body {
-              width: 11in;
-              height: 8.5in;
-              margin: 0;
-              padding: 0;
-              background: white;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            svg {
-              width: 10.8in;
-              height: 8.3in;
-            }
-          </style>
-        </head>
-        <body>${svgContent}</body>
-      </html>
-    `);
-    win.document.close();
-
-    // Wait a moment for layout, then print and close
-    setTimeout(() => {
-      win.focus();
-      win.print();
-      setTimeout(() => win.close(), 1000);
-    }, 400);
-  }
-
+  // Button click handler
   btn.addEventListener("click", () => {
-    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
-    if (isMobile) {
-      openMobilePrintClone();
-    } else {
-      resetForPrintDesktop();
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          window.print();
-          setTimeout(restoreAfterPrintDesktop, 800);
-        }, 200);
-      });
-    }
+    resetForPrint();
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        window.print();
+        setTimeout(restoreAfterPrint, 800);
+      }, 200);
+    });
   });
 })();
 </script>
@@ -823,6 +773,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
