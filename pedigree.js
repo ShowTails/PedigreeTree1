@@ -35,16 +35,11 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // SVG text needs escaped ampersands
-    if (isInSVG(el)) {
-      const safe = value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-      el.innerHTML = safe;
-    } else {
-      el.textContent = value;
-    }
+  if (isInSVG(el)) {
+  el.textContent = value;
+} else {
+  el.textContent = value;
+}
   });
 
   // --- Handle chained fields (e.g. data-chain="name,breed,color") ---
