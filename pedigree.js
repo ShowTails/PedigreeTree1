@@ -2,7 +2,7 @@
 // Supports: data-field, data-chain (space separated), <img> + SVG <image>
 
 window.addEventListener('DOMContentLoaded', () => {
-  // --- Safe parameter fetch that handles & and HTML escaping ---
+  // --- Safe parameter fetch that decodes URL encoding ---
   function getParam(name) {
     const params = new URLSearchParams(window.location.search);
     const value = params.get(name) || '';
@@ -11,9 +11,8 @@ window.addEventListener('DOMContentLoaded', () => {
       .replace(/%26/g, '&')
       .replace(/%27/g, "'")
       .replace(/%20/g, ' ')
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+      .replace(/%3A/g, ':')
+      .replace(/%2F/g, '/');
   }
 
   // --- Handle single fields ---
@@ -36,7 +35,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // --- Handle normal text fields ---
     else {
-      el.textContent = value;
+      // Escape only once for SVG safety
+      const safe = value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      el.innerHTML = safe;
     }
   });
 
@@ -51,8 +55,12 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     if (parts.length > 0) {
-      const joined = parts.join(' '); // space-separated
-      el.textContent = joined;
+      const joined = parts.join(' ');
+      const safe = joined
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      el.innerHTML = safe;
     }
   });
 });
