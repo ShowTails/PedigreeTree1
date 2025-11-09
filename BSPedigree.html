@@ -717,73 +717,47 @@ function enablePinchZoom() {
 })();
 </script>
 
-  
-
-<script>
-  /* === Guaranteed centered & scaled printing using active zoom === */
-(() => {
-  const btn = document.getElementById("print-btn");
-
-  function resetForPrint() {
-    const inst = window.panZoomInstance;
-    if (!inst) return;
-
-    // Save current zoom/pan so we can restore later
-    window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
-
-    // Reset to full view, center, and apply perfect print scale
-    inst.resetZoom();
-    inst.center();
-    inst.zoom(1.45);
-    inst.pan({ x: 60, y: 120 });
-  }
-
-  function restoreAfterPrint() {
-    const inst = window.panZoomInstance;
-    const s = window._savedState;
-    if (inst && s) {
-      inst.zoom(s.zoom);
-      inst.pan(s.pan);
-    }
-  }
-
-  // Hook into browser print lifecycle
-  window.addEventListener("beforeprint", resetForPrint);
-  window.addEventListener("afterprint", restoreAfterPrint);
-
-  // Button click handler
-  btn.addEventListener("click", () => {
-    resetForPrint();
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        window.print();
-        setTimeout(restoreAfterPrint, 800);
-      }, 200);
-    });
-  });
-})();
-</script>
-
-   
   <script>
-      /* === Mobile Print === */
-(function() {
+(() => {
   const btn = document.getElementById("print-btn");
   if (!btn) return;
 
-  btn.addEventListener("click", (event) => {
-    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (!isMobile) return; // only affects mobile
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
+  btn.addEventListener("click", (event) => {
     event.preventDefault();
 
+    // --- DESKTOP PRINT ---
+    if (!isMobile) {
+      const inst = window.panZoomInstance;
+      if (!inst) return;
+
+      // Save current view
+      window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
+
+      // Align and scale for print
+      inst.resetZoom();
+      inst.center();
+      inst.zoom(1.45);
+      inst.pan({ x: 60, y: 120 });
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.print();
+          setTimeout(() => {
+            inst.zoom(window._savedState.zoom);
+            inst.pan(window._savedState.pan);
+          }, 800);
+        }, 200);
+      });
+      return;
+    }
+
+    // --- MOBILE PRINT ---
     const container = document.getElementById("pedigree-container");
     if (!container) return;
 
-    // Grab the current SVG markup
     const svgMarkup = container.innerHTML;
-
-    // Also grab all styles from the main document
     const styleBlocks = Array.from(document.querySelectorAll('style'))
       .map(styleEl => styleEl.outerHTML)
       .join('\n');
@@ -794,14 +768,16 @@ function enablePinchZoom() {
       return;
     }
 
+    // Create a real printable doc that mobile browsers honor
     popup.document.write(`
       <html>
         <head>
-          <title>Print Pedigree</title>
+          <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Print Pedigree</title>
           ${styleBlocks}
           <style>
-            @page { size: landscape; margin: 0; }
+            @page { size: A4 landscape; margin: 0; }
             html, body {
               width: 11in;
               height: 8.5in;
@@ -812,12 +788,19 @@ function enablePinchZoom() {
               align-items: center;
               justify-content: center;
             }
+            #pedigree-container {
+              width: 11in;
+              height: 8.5in;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
             svg {
               width: 10.8in !important;
               height: 8.3in !important;
-              background: white !important;
-              margin: auto;
+              margin: 0 auto !important;
               display: block;
+              background: white !important;
             }
           </style>
         </head>
@@ -826,7 +809,7 @@ function enablePinchZoom() {
     `);
     popup.document.close();
 
-    // Wait for the SVG to render, then open print dialog
+    // Give it a moment to render, then print + close
     setTimeout(() => {
       popup.focus();
       popup.print();
@@ -835,6 +818,9 @@ function enablePinchZoom() {
   });
 })();
 </script>
+
+
+
 
   <script>
 const params = new URLSearchParams(window.location.search);
@@ -873,6 +859,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
