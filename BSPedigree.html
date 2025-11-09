@@ -78,6 +78,23 @@ svg {
       background: white;
     }
 
+    @media print {
+  /* existing print CSS ... */
+
+  /* Reset transforms for print */
+  svg {
+    transform: none !important;
+    width: 10.8in !important;
+    height: 8.3in !important;
+  }
+
+  #pedigree-container {
+    overflow: visible !important;
+    width: auto !important;
+    height: auto !important;
+  }
+}
+
     /* Center the pedigree on the page */
 #pedigree-container {
   width: 11in;
@@ -736,10 +753,10 @@ function enablePinchZoom() {
       window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
 
       // Align and scale for print
-      inst.resetZoom();
-      inst.center();
-      inst.zoom(1.45);
-      inst.pan({ x: 60, y: 120 });
+     // inst.resetZoom();
+     // inst.center();
+   //  inst.zoom(1.45);
+     // inst.pan({ x: 60, y: 120 });
 
       requestAnimationFrame(() => {
         setTimeout(() => {
@@ -859,6 +876,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
