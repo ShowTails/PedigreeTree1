@@ -726,15 +726,17 @@ window.onbeforeprint = () => {
 <script>
 (() => {
   const btn = document.getElementById("print-btn");
+  if (!btn) {
+    console.error("❌ Print button not found");
+    return;
+  }
+
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
   function resetForPrint() {
     const inst = window.panZoomInstance;
     if (!inst) return;
-
-    // Save current zoom/pan so we can restore later
     window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
-
-    // Reset to full view, center, and apply perfect print scale
     inst.resetZoom();
     inst.center();
     inst.zoom(1.45);
@@ -750,31 +752,30 @@ window.onbeforeprint = () => {
     }
   }
 
-  // Hook into browser print lifecycle
-  window.addEventListener("beforeprint", resetForPrint);
-  window.addEventListener("afterprint", restoreAfterPrint);
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
 
-     btn.addEventListener("click", () => {
-  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    // Don't delay — print immediately so mobile doesn't block it
-    resetForPrint();
-    window.print();
-    setTimeout(restoreAfterPrint, 800);
-  } else {
-    // Desktop behavior with centering delay for full render
-    resetForPrint();
-    requestAnimationFrame(() => {
-      setTimeout(() => {
+    if (isMobile) {
+      // immediate synchronous print for mobile
+      resetForPrint();
+      try {
         window.print();
-        setTimeout(restoreAfterPrint, 800);
-      }, 200);
-    });
-  }
-});
-
-
+      } catch (err) {
+        console.error("Mobile print failed:", err);
+      }
+      setTimeout(restoreAfterPrint, 800);
+    } else {
+      // desktop path with render delay
+      resetForPrint();
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.print();
+          setTimeout(restoreAfterPrint, 800);
+        }, 200);
+      });
+    }
+  });
+})();
 </script>
 
 
@@ -817,6 +818,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
