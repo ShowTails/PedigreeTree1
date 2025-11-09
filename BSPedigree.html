@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+     <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -734,104 +734,39 @@ function enablePinchZoom() {
 })();
 </script>
 
-  <script>
+ <script>
 (() => {
   const btn = document.getElementById("print-btn");
   if (!btn) return;
 
-  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
   btn.addEventListener("click", (event) => {
     event.preventDefault();
 
-    // --- DESKTOP PRINT ---
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    const inst = window.panZoomInstance;
+    if (!inst) return;
+
+    // Save state (optional)
+    window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
+
+    // Desktop users still get a fixed print layout
     if (!isMobile) {
-      const inst = window.panZoomInstance;
-      if (!inst) return;
-
-      // Save current view
-      window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
-
-      // Align and scale for print
-     // inst.resetZoom();
-     // inst.center();
-   //  inst.zoom(1.45);
-     // inst.pan({ x: 60, y: 120 });
-
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          window.print();
-          setTimeout(() => {
-            inst.zoom(window._savedState.zoom);
-            inst.pan(window._savedState.pan);
-          }, 800);
-        }, 200);
-      });
-      return;
+      inst.resetZoom();
+      inst.center();
+      inst.zoom(1.45);
+      inst.pan({ x: 60, y: 120 });
     }
 
-    // --- MOBILE PRINT ---
-    const container = document.getElementById("pedigree-container");
-    if (!container) return;
+    // Print immediately — no async calls or popups
+    window.print();
 
-    const svgMarkup = container.innerHTML;
-    const styleBlocks = Array.from(document.querySelectorAll('style'))
-      .map(styleEl => styleEl.outerHTML)
-      .join('\n');
-
-    const popup = window.open("", "_blank", "width=1200,height=800");
-    if (!popup) {
-      alert("Please allow pop-ups for ShowTails to print pedigrees.");
-      return;
+    // Restore zoom/pan after print (for desktop)
+    if (!isMobile) {
+      setTimeout(() => {
+        inst.zoom(window._savedState.zoom);
+        inst.pan(window._savedState.pan);
+      }, 800);
     }
-
-    // Create a real printable doc that mobile browsers honor
-    popup.document.write(`
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Print Pedigree</title>
-          ${styleBlocks}
-          <style>
-            @page { size: A4 landscape; margin: 0; }
-            html, body {
-              width: 11in;
-              height: 8.5in;
-              margin: 0;
-              padding: 0;
-              background: white;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            #pedigree-container {
-              width: 11in;
-              height: 8.5in;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            svg {
-              width: 10.8in !important;
-              height: 8.3in !important;
-              margin: 0 auto !important;
-              display: block;
-              background: white !important;
-            }
-          </style>
-        </head>
-        <body>${svgMarkup}</body>
-      </html>
-    `);
-    popup.document.close();
-
-    // Give it a moment to render, then print + close
-    setTimeout(() => {
-      popup.focus();
-      popup.print();
-      setTimeout(() => popup.close(), 1500);
-    }, 600);
   });
 })();
 </script>
@@ -876,6 +811,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
