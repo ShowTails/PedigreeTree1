@@ -136,18 +136,30 @@ function getParam(name) {
 
 
 
-    <image id="logo" x="400" y="400" width="120" height="120" preserveAspectRatio="xMinYMin meet"></image>
-    <g transform="translate(155,30)">
-      <text x="40" y="-100" text-anchor="left" class="name" data-field="rabbitry"></text>
-      <text x="40" y="-80" text-anchor="left" class="name" data-field="street"></text>
-      <text x="40" y="-60" text-anchor="left" class="name" data-chain="city,state,zip"></text>
-      <text x="40" y="-40" text-anchor="left" class="name" data-field="phone"></text>
-      <text x="40" y="-20" text-anchor="left" class="name" data-field="email"></text>
+   <!-- Header with logo + rabbitry info -->
+<g id="header" transform="translate(100, 20)">
+  <!-- Logo auto-scales beside text -->
+  <image
+    id="logo"
+    x="0"
+    y="-40"
+    width="100"
+    height="100"
+    preserveAspectRatio="xMidYMid meet"
+  />
+  
+  <!-- Rabbitry info -->
+  <g transform="translate(120, 0)">
+    <text x="0" y="0" text-anchor="start" class="title" data-field="rabbitry"></text>
+    <text x="0" y="20" text-anchor="start" class="name" data-field="street"></text>
+    <text x="0" y="40" text-anchor="start" class="name" data-chain="city,state,zip"></text>
+    <text x="0" y="60" text-anchor="start" class="name" data-field="phone"></text>
+    <text x="0" y="80" text-anchor="start" class="name" data-field="email"></text>
+    <text x="0" y="110" text-anchor="start" class="name">Breed:</text>
+    <text x="60" y="110" text-anchor="start" class="name" data-field="breed"></text>
+  </g>
+</g>
 
-      <text x="20" y="40" text-anchor="left" class="name">Breed:</text>
-      <text x="80" y="40" text-anchor="left" class="name" data-field="breed"></text>
-      
-    </g>
 
     <!-- Signature / authenticity bottom-left -->
     <g transform="translate(20,740)">
@@ -863,6 +875,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
