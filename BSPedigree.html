@@ -717,21 +717,17 @@ function enablePinchZoom() {
 })();
 </script>
 
-  
-
 <script>
-  /* === Guaranteed centered & scaled printing using active zoom === */
 (() => {
   const btn = document.getElementById("print-btn");
+  if (!btn) return;
+
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
   function resetForPrint() {
     const inst = window.panZoomInstance;
     if (!inst) return;
-
-    // Save current zoom/pan so we can restore later
     window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
-
-    // Reset to full view, center, and apply perfect print scale
     inst.resetZoom();
     inst.center();
     inst.zoom(1.45);
@@ -747,94 +743,70 @@ function enablePinchZoom() {
     }
   }
 
-  // Hook into browser print lifecycle
-  window.addEventListener("beforeprint", resetForPrint);
-  window.addEventListener("afterprint", restoreAfterPrint);
-
-  // Button click handler
-  btn.addEventListener("click", () => {
-    resetForPrint();
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        window.print();
-        setTimeout(restoreAfterPrint, 800);
-      }, 200);
-    });
-  });
-})();
-</script>
-
-   
-  <script>
-      /* === Mobile Print === */
-(function() {
-  const btn = document.getElementById("print-btn");
-  if (!btn) return;
-
   btn.addEventListener("click", (event) => {
-    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (!isMobile) return; // only affects mobile
-
     event.preventDefault();
 
-    const container = document.getElementById("pedigree-container");
-    if (!container) return;
+    if (isMobile) {
+      // --- Mobile path: open a popup with full CSS ---
+      const container = document.getElementById("pedigree-container");
+      if (!container) return;
+      const svgMarkup = container.innerHTML;
+      const styleBlocks = Array.from(document.querySelectorAll("style"))
+        .map((el) => el.outerHTML)
+        .join("\n");
 
-    // Grab the current SVG markup
-    const svgMarkup = container.innerHTML;
+      const popup = window.open("", "_blank", "width=1200,height=800");
+      if (!popup) {
+        alert("Please allow pop-ups for ShowTails to print pedigrees.");
+        return;
+      }
 
-    // Also grab all styles from the main document
-    const styleBlocks = Array.from(document.querySelectorAll('style'))
-      .map(styleEl => styleEl.outerHTML)
-      .join('\n');
+      popup.document.write(`
+        <html>
+          <head>
+            <title>Print Pedigree</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            ${styleBlocks}
+            <style>
+              @page { size: landscape; margin: 0; }
+              html, body {
+                width: 11in; height: 8.5in; margin: 0; padding: 0;
+                background: white; display: flex; align-items: center; justify-content: center;
+              }
+              svg {
+                width: 10.8in !important; height: 8.3in !important;
+                background: white !important; margin: auto; display: block;
+              }
+            </style>
+          </head>
+          <body>${svgMarkup}</body>
+        </html>
+      `);
+      popup.document.close();
 
-    const popup = window.open("", "_blank", "width=1200,height=800");
-    if (!popup) {
-      alert("Please allow pop-ups for ShowTails to print pedigrees.");
-      return;
+      popup.onload = () => {
+        popup.focus();
+        popup.print();
+        setTimeout(() => popup.close(), 1500);
+      };
+    } else {
+      // --- Desktop path: direct print with centering ---
+      resetForPrint();
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.print();
+          setTimeout(restoreAfterPrint, 800);
+        }, 200);
+      });
     }
-
-    popup.document.write(`
-      <html>
-        <head>
-          <title>Print Pedigree</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          ${styleBlocks}
-          <style>
-            @page { size: landscape; margin: 0; }
-            html, body {
-              width: 11in;
-              height: 8.5in;
-              margin: 0;
-              padding: 0;
-              background: white;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            svg {
-              width: 10.8in !important;
-              height: 8.3in !important;
-              background: white !important;
-              margin: auto;
-              display: block;
-            }
-          </style>
-        </head>
-        <body>${svgMarkup}</body>
-      </html>
-    `);
-    popup.document.close();
-
-    // Wait for the SVG to render, then open print dialog
-    setTimeout(() => {
-      popup.focus();
-      popup.print();
-      setTimeout(() => popup.close(), 1500);
-    }, 600);
   });
 })();
 </script>
+  
+
+
+   
+ 
 
   <script>
 const params = new URLSearchParams(window.location.search);
@@ -873,3 +845,4 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
