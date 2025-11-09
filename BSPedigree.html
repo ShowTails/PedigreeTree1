@@ -605,12 +605,13 @@ function getParam(name) {
       onUpdatedCTM: function() {} // noop to avoid unnecessary animations
     });
     window.panZoomInstance = panZoom; // ✅ make globally accessible
-    fitToContainer();
-    enablePointerPan();    
-    enablePinchZoom();     
-    wirePointerHandlers();  // robust pan & pinch in tricky webviews
-    wireWheelZoom();        // desktop wheel-zoom
-    initialized = true;
+   fitToContainer();
+enablePointerPan();    
+enablePinchZoom();     
+// wirePointerHandlers();  // ← removed, function no longer exists
+wireWheelZoom();        // desktop wheel-zoom
+initialized = true;
+
   }
 
   // Desktop wheel zoom
@@ -831,6 +832,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
