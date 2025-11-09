@@ -739,8 +739,8 @@ window.onbeforeprint = () => {
     window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
     inst.resetZoom();
     inst.center();
-    inst.zoom(1.45);
-    inst.pan({ x: 0, y: 180 });
+    inst.zoom(1.35);
+    inst.pan({ x: 60, y: 160 });
   }
 
   function restoreAfterPrint() {
@@ -751,31 +751,44 @@ window.onbeforeprint = () => {
       inst.pan(s.pan);
     }
   }
+btn.addEventListener("click", (e) => {
+  e.preventDefault();
+  const inst = window.panZoomInstance;
+  if (!inst) return;
 
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-    if (isMobile) {
-      // immediate synchronous print for mobile
-      resetForPrint();
-      try {
+  if (isMobile) {
+    // single, synchronous print – no popup, no async timers
+    inst.resetZoom();
+    inst.center();
+    inst.zoom(1.25);        // slightly smaller zoom for mobile page fit
+    inst.pan({ x: 0, y: 120 });  // move tree down a bit
+    window.print();
+    setTimeout(() => {
+      inst.zoom(window._savedState.zoom);
+      inst.pan(window._savedState.pan);
+    }, 500);
+  } else {
+    // desktop path
+    inst.resetZoom();
+    inst.center();
+    inst.zoom(1.35);
+    inst.pan({ x: 60, y: 160 });
+    requestAnimationFrame(() => {
+      setTimeout(() => {
         window.print();
-      } catch (err) {
-        console.error("Mobile print failed:", err);
-      }
-      setTimeout(restoreAfterPrint, 800);
-    } else {
-      // desktop path with render delay
-      resetForPrint();
-      requestAnimationFrame(() => {
         setTimeout(() => {
-          window.print();
-          setTimeout(restoreAfterPrint, 800);
-        }, 200);
-      });
-    }
-  });
-})();
+          inst.zoom(window._savedState.zoom);
+          inst.pan(window._savedState.pan);
+        }, 800);
+      }, 200);
+    });
+  }
+});
+
+
 </script>
 
 
@@ -818,6 +831,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
