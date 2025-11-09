@@ -93,6 +93,21 @@ svg {
     }
   }
 
+    /* --- Fix mobile printing of transformed SVGs --- */
+@media print {
+  svg {
+    transform: none !important;     /* reset any pan/zoom transform */
+    zoom: 1 !important;             /* ignore browser zoom scaling */
+  }
+
+  body, html, #pedigree-container {
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+ 
+
 </style>
 
 
@@ -739,8 +754,16 @@ window.onbeforeprint = () => {
   window.addEventListener("beforeprint", resetForPrint);
   window.addEventListener("afterprint", restoreAfterPrint);
 
-  // Button click handler
-  btn.addEventListener("click", () => {
+     btn.addEventListener("click", () => {
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // Don't delay — print immediately so mobile doesn't block it
+    resetForPrint();
+    window.print();
+    setTimeout(restoreAfterPrint, 800);
+  } else {
+    // Desktop behavior with centering delay for full render
     resetForPrint();
     requestAnimationFrame(() => {
       setTimeout(() => {
@@ -748,8 +771,10 @@ window.onbeforeprint = () => {
         setTimeout(restoreAfterPrint, 800);
       }, 200);
     });
-  });
-})();
+  }
+});
+
+
 </script>
 
 
@@ -792,6 +817,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
