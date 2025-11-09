@@ -133,23 +133,20 @@ function getParam(name) {
   <div id="pedigree-container">
 <svg id="pedigree-svg" viewBox="-80 -120 1750 1450" preserveAspectRatio="xMidYMid meet">
 
-
-
-
-   <!-- Header with logo + rabbitry info -->
-<g id="header" transform="translate(100, 20)">
-  <!-- Logo auto-scales beside text -->
+<!-- Header with larger logo and raised rabbitry info -->
+<g id="header" transform="translate(100, -40)">
+  <!-- Larger logo -->
   <image
     id="logo"
     x="0"
-    y="-40"
-    width="100"
-    height="100"
+    y="-60"
+    width="140"
+    height="140"
     preserveAspectRatio="xMidYMid meet"
   />
-  
-  <!-- Rabbitry info -->
-  <g transform="translate(120, 0)">
+
+  <!-- Rabbitry info raised slightly -->
+  <g transform="translate(160, -10)">
     <text x="0" y="0" text-anchor="start" class="title" data-field="rabbitry"></text>
     <text x="0" y="20" text-anchor="start" class="name" data-field="street"></text>
     <text x="0" y="40" text-anchor="start" class="name" data-chain="city,state,zip"></text>
@@ -159,6 +156,7 @@ function getParam(name) {
     <text x="60" y="110" text-anchor="start" class="name" data-field="breed"></text>
   </g>
 </g>
+
 
 
     <!-- Signature / authenticity bottom-left -->
@@ -875,6 +873,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
