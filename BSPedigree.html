@@ -717,13 +717,33 @@ function enablePinchZoom() {
 })();
 </script>
 
-
-  <script>
+//Printing
+ <script>
 window.addEventListener("load", () => {
   const btn = document.getElementById("print-btn");
   if (!btn) return;
 
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+  function centerAndScale() {
+    const inst = window.panZoomInstance;
+    if (!inst) return;
+
+    inst.resetZoom();
+    inst.center();
+
+    // Apply your same perfect desktop scale and pan
+    inst.zoom(1.45);
+    inst.pan({ x: 60, y: 120 });
+  }
+
+  function restoreView(saved) {
+    const inst = window.panZoomInstance;
+    if (inst && saved) {
+      inst.zoom(saved.zoom);
+      inst.pan(saved.pan);
+    }
+  }
 
   btn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -734,29 +754,30 @@ window.addEventListener("load", () => {
       return;
     }
 
-    // Save zoom/pan so we can restore later
+    // Save current zoom/pan to restore later
     const saved = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-    if (!isMobile) {
-      // ✅ Desktop: restore the perfect original scale
-      inst.resetZoom();
-      inst.center();
-      inst.zoom(1.45);
-      inst.pan({ x: 60, y: 120 });
-      setTimeout(() => {
-        window.print();
-        setTimeout(() => {
-          inst.zoom(saved.zoom);
-          inst.pan(saved.pan);
-        }, 600);
-      }, 200);
-    } else {
-      // ✅ Mobile: just print the current on-screen view (no transform)
+    // Always center + scale first
+    centerAndScale();
+
+    // Wait a moment for rendering to settle
+    setTimeout(() => {
       window.print();
-    }
+
+      // Restore user zoom/pan afterward
+      setTimeout(() => restoreView(saved), 800);
+    }, isMobile ? 600 : 200);
   });
+
+  // 🟢 Auto-center and scale pedigree on load for both mobile & desktop
+  window.addEventListener("resize", () => {
+    centerAndScale();
+  });
+  // initial call
+  setTimeout(centerAndScale, 400);
 });
 </script>
+
 
 
 
@@ -800,6 +821,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
