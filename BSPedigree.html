@@ -700,7 +700,7 @@ window.addEventListener("load", () => {
 
 <!-- 🖨️ Mobile Print Pop-Up Fix -->
 <script>
-/* === Mobile Print Patch (Finalized for iOS + Android) === */
+/* === Mobile Print Patch – Fix for iOS scaling & missing images === */
 window.addEventListener("load", () => {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   if (!isMobile) return;
@@ -711,70 +711,71 @@ window.addEventListener("load", () => {
   btn.addEventListener("click", (e) => {
     e.preventDefault();
 
-    const inst = window.panZoomInstance;
-    const saved = inst ? { pan: inst.getPan(), zoom: inst.getZoom() } : null;
+    const container = document.getElementById("pedigree-container");
+    if (!container) return;
 
-    // 1️⃣ Center and scale pedigree before printing
-    if (inst) {
-      inst.resetZoom();
-      inst.center();
-      inst.zoom(1.25); // Mobile-friendly zoom (slightly smaller than desktop)
-      inst.pan({ x: 50, y: 100 });
+    // 🟢 Grab the live SVG markup including images
+    const svgMarkup = container.querySelector("svg").outerHTML;
+    const styleBlocks = Array.from(document.querySelectorAll("style"))
+      .map(s => s.outerHTML)
+      .join("\n");
+
+    // 🟢 Open a clean, printable popup (bypasses iOS scaling limits)
+    const popup = window.open("", "_blank", "width=1200,height=800");
+    if (!popup) {
+      alert("Please allow pop-ups for ShowTails to print pedigrees.");
+      return;
     }
 
-    // 2️⃣ Apply temporary landscape and scaling fixes
-    const style = document.createElement("style");
-    style.textContent = `
-      @media print {
-        @page { size: landscape; margin: 0; }
-        html, body {
-          width: 100vw !important;
-          height: 100vh !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          overflow: hidden !important;
-          background: white !important;
-        }
-        #pedigree-container {
-          width: 100vw !important;
-          height: 100vh !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          overflow: hidden !important;
-        }
-        svg {
-          width: 95vw !important;
-          height: auto !important;
-          max-height: 95vh !important;
-          transform: none !important;
-          margin: auto !important;
-          display: block !important;
-          page-break-inside: avoid !important;
-          background: white !important;
-        }
-      }
-    `;
-    document.head.appendChild(style);
+    popup.document.write(`
+      <html>
+        <head>
+          <title>Print Pedigree</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          ${styleBlocks}
+          <style>
+            @page { size: landscape; margin: 0; }
+            html, body {
+              width: 100vw;
+              height: 100vh;
+              margin: 0;
+              padding: 0;
+              background: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              overflow: hidden;
+            }
+            svg {
+              width: 95vw !important;
+              height: auto !important;
+              max-height: 95vh !important;
+              margin: auto;
+              display: block;
+              background: white !important;
+            }
+          </style>
+        </head>
+        <body>${svgMarkup}</body>
+      </html>
+    `);
 
-    // 3️⃣ Wait for rendering, then trigger print
+    popup.document.close();
+
+    // 🟢 Wait for render, trigger print, then close popup
     setTimeout(() => {
-      window.print();
-      // 4️⃣ Restore view & remove temp style
-      setTimeout(() => {
-        if (inst && saved) {
-          inst.zoom(saved.zoom);
-          inst.pan(saved.pan);
-        }
-        style.remove();
-      }, 800);
+      popup.focus();
+      popup.print();
+      setTimeout(() => popup.close(), 1500);
     }, 600);
   });
 });
 </script>
 
 
+
 </body>
 </html> 
  
+
 
