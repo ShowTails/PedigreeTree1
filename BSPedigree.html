@@ -717,92 +717,47 @@ function enablePinchZoom() {
 })();
 </script>
 
-<script>
-(() => {
+
+  <script>
+window.addEventListener("load", () => {
   const btn = document.getElementById("print-btn");
   if (!btn) return;
 
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-  function resetForPrint() {
-    const inst = window.panZoomInstance;
-    if (!inst) return;
-    window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
-    inst.resetZoom();
-    inst.center();
-    inst.zoom(1.5);
-    inst.pan({ x: 60, y: 120 });
-  }
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
 
-  function restoreAfterPrint() {
     const inst = window.panZoomInstance;
-    const s = window._savedState;
-    if (inst && s) {
-      inst.zoom(s.zoom);
-      inst.pan(s.pan);
+    if (!inst) {
+      window.print();
+      return;
     }
-  }
 
-  btn.addEventListener("click", (event) => {
-    event.preventDefault();
+    // Save zoom/pan so we can restore later
+    const saved = { pan: inst.getPan(), zoom: inst.getZoom() };
 
-    if (isMobile) {
-      // --- Mobile path: open a popup with full CSS ---
-      const container = document.getElementById("pedigree-container");
-      if (!container) return;
-      const svgMarkup = container.innerHTML;
-      const styleBlocks = Array.from(document.querySelectorAll("style"))
-        .map((el) => el.outerHTML)
-        .join("\n");
-
-      const popup = window.open("", "_blank", "width=1200,height=800");
-      if (!popup) {
-        alert("Please allow pop-ups for ShowTails to print pedigrees.");
-        return;
-      }
-
-      popup.document.write(`
-        <html>
-          <head>
-            <title>Print Pedigree</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            ${styleBlocks}
-            <style>
-              @page { size: landscape; margin: 0; }
-              html, body {
-                width: 11in; height: 8.5in; margin: 0; padding: 0;
-                background: white; display: flex; align-items: center; justify-content: center;
-              }
-              svg {
-                width: 10.8in !important; height: 8.3in !important;
-                background: white !important; margin: auto; display: block;
-              }
-            </style>
-          </head>
-          <body>${svgMarkup}</body>
-        </html>
-      `);
-      popup.document.close();
-
-      popup.onload = () => {
-        popup.focus();
-        popup.print();
-        setTimeout(() => popup.close(), 1500);
-      };
-    } else {
-      // --- Desktop path: direct print with centering ---
-      resetForPrint();
-      requestAnimationFrame(() => {
+    if (!isMobile) {
+      // ✅ Desktop: restore the perfect original scale
+      inst.resetZoom();
+      inst.center();
+      inst.zoom(1.45);
+      inst.pan({ x: 60, y: 120 });
+      setTimeout(() => {
+        window.print();
         setTimeout(() => {
-          window.print();
-          setTimeout(restoreAfterPrint, 800);
-        }, 200);
-      });
+          inst.zoom(saved.zoom);
+          inst.pan(saved.pan);
+        }, 600);
+      }, 200);
+    } else {
+      // ✅ Mobile: just print the current on-screen view (no transform)
+      window.print();
     }
   });
-})();
+});
 </script>
-  
+
 
 
    
@@ -845,5 +800,6 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
