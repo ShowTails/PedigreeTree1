@@ -700,71 +700,81 @@ window.addEventListener("load", () => {
 
 <!-- 🖨️ Mobile Print Pop-Up Fix -->
 <script>
-(() => {
+/* === Mobile Print Patch (Finalized for iOS + Android) === */
+window.addEventListener("load", () => {
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (!isMobile) return;
+
   const btn = document.getElementById("print-btn");
   if (!btn) return;
 
   btn.addEventListener("click", (e) => {
     e.preventDefault();
 
-    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (!isMobile) return;
+    const inst = window.panZoomInstance;
+    const saved = inst ? { pan: inst.getPan(), zoom: inst.getZoom() } : null;
 
-    const container = document.getElementById("pedigree-container");
-    if (!container) return;
-
-    const svgMarkup = container.innerHTML;
-    const styles = Array.from(document.querySelectorAll("style"))
-      .map((el) => el.outerHTML)
-      .join("\n");
-
-    const popup = window.open("", "_blank");
-    if (!popup) {
-      alert("Please allow pop-ups for ShowTails to print pedigrees.");
-      return;
+    // 1️⃣ Center and scale pedigree before printing
+    if (inst) {
+      inst.resetZoom();
+      inst.center();
+      inst.zoom(1.25); // Mobile-friendly zoom (slightly smaller than desktop)
+      inst.pan({ x: 50, y: 100 });
     }
 
-    popup.document.write(`
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Print Pedigree</title>
-          ${styles}
-          <style>
-            @page { size: 11in 8.5in landscape; margin: 0; }
-            html, body {
-              margin: 0;
-              padding: 0;
-              width: 11in;
-              height: 8.5in;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: white;
-            }
-            svg {
-              width: 10.8in !important;
-              height: 8.3in !important;
-              background: white;
-              margin: auto;
-              display: block;
-            }
-          </style>
-        </head>
-        <body>${svgMarkup}</body>
-      </html>
-    `);
-    popup.document.close();
+    // 2️⃣ Apply temporary landscape and scaling fixes
+    const style = document.createElement("style");
+    style.textContent = `
+      @media print {
+        @page { size: landscape; margin: 0; }
+        html, body {
+          width: 100vw !important;
+          height: 100vh !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          background: white !important;
+        }
+        #pedigree-container {
+          width: 100vw !important;
+          height: 100vh !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          overflow: hidden !important;
+        }
+        svg {
+          width: 95vw !important;
+          height: auto !important;
+          max-height: 95vh !important;
+          transform: none !important;
+          margin: auto !important;
+          display: block !important;
+          page-break-inside: avoid !important;
+          background: white !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
 
+    // 3️⃣ Wait for rendering, then trigger print
     setTimeout(() => {
-      popup.focus();
-      popup.print();
-      setTimeout(() => popup.close(), 2000);
-    }, 800);
+      window.print();
+      // 4️⃣ Restore view & remove temp style
+      setTimeout(() => {
+        if (inst && saved) {
+          inst.zoom(saved.zoom);
+          inst.pan(saved.pan);
+        }
+        style.remove();
+      }, 800);
+    }, 600);
   });
-})();
+});
 </script>
+
 
 </body>
 </html> 
  
+
