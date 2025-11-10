@@ -818,9 +818,79 @@ document.querySelectorAll('.box').forEach(box => {
   });
 });
 </script>
+
+<script>
+window.addEventListener("load", () => {
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (!isMobile) return;
+
+  const btn = document.getElementById("print-btn");
+  if (!btn) return;
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    const inst = window.panZoomInstance;
+    if (!inst) {
+      window.print();
+      return;
+    }
+
+    // Save current pan/zoom
+    const saved = { pan: inst.getPan(), zoom: inst.getZoom() };
+
+    // ✅ Force perfect landscape layout
+    inst.resetZoom();
+    inst.center();
+    inst.zoom(1.2); // Slightly smaller than desktop 1.45 to fit mobile viewport
+    inst.pan({ x: 40, y: 100 });
+
+    // Force body width/height to match landscape dimensions
+    document.body.style.width = "11in";
+    document.body.style.height = "8.5in";
+    document.body.style.overflow = "visible";
+
+    // Force landscape media
+    const style = document.createElement("style");
+    style.textContent = `
+      @media print {
+        @page { size: 11in 8.5in landscape; margin: 0; }
+        html, body {
+          width: 11in !important;
+          height: 8.5in !important;
+          transform: none !important;
+          overflow: visible !important;
+        }
+        svg {
+          width: 10.8in !important;
+          height: 8.3in !important;
+          transform: none !important;
+          margin: 0 auto !important;
+          display: block !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Let layout settle before printing
+    setTimeout(() => {
+      window.print();
+      // restore previous view
+      setTimeout(() => {
+        inst.zoom(saved.zoom);
+        inst.pan(saved.pan);
+        style.remove();
+      }, 600);
+    }, 400);
+  });
+});
+</script>
+
+  
 </body>
 
 </html>
+
 
 
 
