@@ -27,16 +27,14 @@
 
   svg {
     display: block;
-    width: 100% !important;
-    height: 100% !important;
-    max-height: 8.3in !important;
-    max-width: 11.5in !important;
-    transform: none !important;
-    margin: 0.1in auto 0 !important;
-    background: white !important;
-    page-break-inside: avoid !important;
-    touch-action: none !important;
-    -ms-touch-action: none !important;
+    width: 100%;
+    height: 100%;
+    max-width: 11.5in;
+    max-height: 8.3in;
+    margin: 0 auto;
+    background: white;
+    page-break-inside: avoid;
+    touch-action: none;
   }
 
   .box {
@@ -94,74 +92,60 @@
       margin: 0 auto !important;
     }
 
-    #print-btn, #reset-view-btn {
+    image {
+      visibility: visible !important;
+      display: inline !important;
+    }
+
+    #print-btn {
       display: none !important;
     }
   }
 </style>
-
-<script>
-function getParam(name) {
-  const params = new URLSearchParams(window.location.search);
-  const value = params.get(name) || '';
-  return value
-    .replaceAll('+', ' ')
-    .replace(/%26/g, '&')
-    .replace(/%27/g, "'")
-    .replace(/%20/g, ' ')
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-</script>
 </head>
 
 <body>
 
 <div id="pedigree-container">
   <svg id="pedigree-svg" viewBox="-80 -120 1750 1450" preserveAspectRatio="xMidYMid meet">
-    <!-- Your pedigree content (unchanged) -->
 
-<!-- Header with larger logo and raised rabbitry info -->
-<g id="header" transform="translate(100, -40)">
-  <!-- Larger logo -->
-  <image
-    id="logo"
-    x="0"
-    y="-60"
-    width="140"
-    height="140"
-    preserveAspectRatio="xMidYMid meet"
-  />
+    <!-- BACKGROUND BORDER IMAGE (ready for future customization) -->
+    <image
+      id="border"
+      x="-100"
+      y="-140"
+      width="1900"
+      height="1550"
+      preserveAspectRatio="xMidYMid slice"
+      opacity="1.0"
+      style="pointer-events:none;"
+    />
 
-  <!-- Rabbitry info raised slightly -->
-  <g transform="translate(160, -10)">
-    <text x="0" y="0" text-anchor="start" class="title" data-field="rabbitry"></text>
-    <text x="0" y="20" text-anchor="start" class="name" data-field="street"></text>
-    <text x="0" y="40" text-anchor="start" class="name" data-chain="city,state,zip"></text>
-    <text x="0" y="60" text-anchor="start" class="name" data-field="phone"></text>
-    <text x="0" y="80" text-anchor="start" class="name" data-field="email"></text>
-    <text x="0" y="110" text-anchor="start" class="name">Breed:</text>
-    <text x="60" y="110" text-anchor="start" class="name" data-field="breed"></text>
-  </g>
-</g>
+    <!-- HEADER -->
+    <g id="header" transform="translate(100, -40)">
+      <image id="logo" x="0" y="-60" width="140" height="140" preserveAspectRatio="xMidYMid meet"/>
+      <g transform="translate(160, -10)">
+        <text x="0" y="0" class="title" data-field="rabbitry"></text>
+        <text x="0" y="20" class="name" data-field="street"></text>
+        <text x="0" y="40" class="name" data-chain="city,state,zip"></text>
+        <text x="0" y="60" class="name" data-field="phone"></text>
+        <text x="0" y="80" class="name" data-field="email"></text>
+        <text x="0" y="110" class="name">Breed:</text>
+        <text x="60" y="110" class="name" data-field="breed"></text>
+      </g>
+    </g>
 
-
-
-    <!-- Signature / authenticity bottom-left -->
+    <!-- SIGNATURE AREA -->
     <g transform="translate(20,740)">
-      <text class="name" x="40" y="200">I hereby certify that this pedigree is correct to the best of my knowledge.</text>
-      <line x1="40" y1="260" x2="350" y2="260" stroke="#000" stroke-width="1" />
+      <text class="name" x="40" y="200">
+        I hereby certify that this pedigree is correct to the best of my knowledge.
+      </text>
+      <line x1="40" y1="260" x2="350" y2="260" stroke="#000" stroke-width="1"/>
       <text class="name" x="40" y="280">Breeder's Signature</text>
     </g>
-  <image
-  id="signature"
-  x="40"
-  y="950"
-  width="220"
-  height="80"
-  preserveAspectRatio="xMidYMid meet"
-/>
+    <image id="signature" x="40" y="950" width="220" height="80" preserveAspectRatio="xMidYMid meet"/>
+
+    <!-- (rest of pedigree tree boxes unchanged) -->
 
   <!-- GEN 1 - Base Rabbit -->
   <rect x="100" y="380" width="220" height="90" class="box"/>
@@ -516,6 +500,7 @@ function getParam(name) {
     </svg>
 </div>
 
+<!-- PRINT BUTTON -->
 <button id="print-btn" style="
   position: absolute;
   top: 10px;
@@ -528,153 +513,40 @@ function getParam(name) {
   cursor: pointer;
 ">Print / Save PDF</button>
 
-<script src="pedigree.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 
-<!-- 🔧 SVG Pan & Zoom Initialization -->
+<!-- PAN / ZOOM -->
 <script>
-(function () {
+(function() {
   const svg = document.getElementById('pedigree-svg');
   const container = document.getElementById('pedigree-container');
+  let panZoom;
 
-  function validBox(vb) {
-    return vb && isFinite(vb.width) && vb.width > 0 && isFinite(vb.height) && vb.height > 0;
-  }
-
-  let panZoom = null;
-  let initialized = false;
-
-  function fitToContainer() {
+  function fit() {
     if (!panZoom) return;
     const vb = svg.viewBox.baseVal;
-    if (!validBox(vb)) return;
-    const cw = container.clientWidth;
-    const ch = container.clientHeight;
-    if (!cw || !ch) return;
-    const scale = Math.min(cw / vb.width, ch / vb.height);
-    if (isFinite(scale) && scale > 0) {
-      panZoom.zoom(scale);
-      panZoom.pan({
-        x: (cw - vb.width * scale) / 2,
-        y: (ch - vb.height * scale) / 2
-      });
-    }
+    const scale = Math.min(container.clientWidth / vb.width, container.clientHeight / vb.height);
+    panZoom.zoom(scale);
+    panZoom.pan({
+      x: (container.clientWidth - vb.width * scale) / 2,
+      y: (container.clientHeight - vb.height * scale) / 2
+    });
   }
 
-  function tryInit() {
-    if (initialized) return;
-    if (typeof window.svgPanZoom !== 'function') {
-      console.error('svg-pan-zoom not loaded.');
-      return;
-    }
-    const vb = svg.viewBox.baseVal;
-    const cw = container.clientWidth;
-    const ch = container.clientHeight;
-    if (!validBox(vb) || !cw || !ch) return;
-
-    panZoom = svgPanZoom(svg, {
-      panEnabled: true,
-      zoomEnabled: true,
-      mouseWheelZoomEnabled: true,
-      controlIconsEnabled: false,
-      fit: false,
-      center: true,
-      minZoom: 0.25,
-      maxZoom: 10,
-      dblClickZoomEnabled: true,
-      onUpdatedCTM: function() {}
-    });
+  window.addEventListener('load', () => {
+    panZoom = svgPanZoom(svg, { zoomEnabled: true, panEnabled: true, controlIconsEnabled: false });
     window.panZoomInstance = panZoom;
-    fitToContainer();
-    enablePointerPan();
-    enablePinchZoom();
-    wireWheelZoom();
-    initialized = true;
-  }
-
-  function wireWheelZoom() {
-    container.addEventListener('wheel', (e) => {
-      if (!panZoom) return;
-      const rect = svg.getBoundingClientRect();
-      const point = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-      const factor = e.deltaY > 0 ? 0.9 : 1.1;
-      e.preventDefault();
-      panZoom.zoomAtPoint(factor, point);
-    }, { passive: false });
-  }
-
-  function enablePointerPan() {
-    let isPanning = false;
-    let start = { x: 0, y: 0 };
-    svg.addEventListener("pointerdown", (e) => {
-      isPanning = true;
-      start = { x: e.clientX, y: e.clientY };
-      svg.setPointerCapture(e.pointerId);
-    });
-    svg.addEventListener("pointermove", (e) => {
-      if (!isPanning || !panZoom) return;
-      const dx = e.clientX - start.x;
-      const dy = e.clientY - start.y;
-      panZoom.panBy({ x: dx, y: dy });
-      start = { x: e.clientX, y: e.clientY };
-    });
-    svg.addEventListener("pointerup", () => (isPanning = false));
-    svg.addEventListener("pointercancel", () => (isPanning = false));
-  }
-
-  function enablePinchZoom() {
-    let pinchStart = null;
-    let startZoom = 1;
-    svg.addEventListener("touchstart", (e) => {
-      if (e.touches.length === 2 && window.panZoomInstance) {
-        e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        pinchStart = Math.hypot(dx, dy);
-        startZoom = window.panZoomInstance.getZoom();
-      }
-    }, { passive: false });
-    svg.addEventListener("touchmove", (e) => {
-      if (e.touches.length === 2 && window.panZoomInstance && pinchStart) {
-        e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const pinchNow = Math.hypot(dx, dy);
-        const zoomRatio = pinchNow / pinchStart;
-        const rect = svg.getBoundingClientRect();
-        const mid = {
-          x: (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left,
-          y: (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top,
-        };
-        window.panZoomInstance.zoomAtPoint(startZoom * zoomRatio, mid);
-      }
-    }, { passive: false });
-    svg.addEventListener("touchend", () => { pinchStart = null; });
-  }
-
-  const ro = new ResizeObserver(() => {
-    if (!initialized) tryInit();
-    else fitToContainer();
+    fit();
+    new ResizeObserver(fit).observe(container);
   });
-  ro.observe(container);
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-      if (!initialized) tryInit();
-      else fitToContainer();
-    }
-  });
-  window.addEventListener("load", tryInit);
 })();
 </script>
 
-<!-- 🖨️ Desktop Print Logic -->
+<!-- PRINT LOGIC (desktop + mobile) -->
 <script>
 window.addEventListener("load", () => {
   const btn = document.getElementById("print-btn");
   if (!btn) return;
-
-  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  if (isMobile) return;
 
   btn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -684,98 +556,47 @@ window.addEventListener("load", () => {
     const saved = { pan: inst.getPan(), zoom: inst.getZoom() };
     inst.resetZoom();
     inst.center();
-    inst.zoom(1.45);
-    inst.pan({ x: 60, y: 120 });
+
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    inst.zoom(isMobile ? 1.22 : 1.45);
+    inst.pan({ x: isMobile ? 50 : 60, y: isMobile ? 100 : 120 });
+
+    ["logo", "signature", "border"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const href = el.getAttribute("href") || el.getAttribute("xlink:href");
+        if (href) {
+          el.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", href);
+          el.setAttribute("href", href);
+        }
+      }
+    });
 
     setTimeout(() => {
       window.print();
       setTimeout(() => {
         inst.zoom(saved.zoom);
         inst.pan(saved.pan);
-      }, 600);
-    }, 200);
+      }, 800);
+    }, 400);
   });
 });
 </script>
 
-<!-- 🖨️ Mobile Print Pop-Up Fix -->
+<!-- 🧩 Border Loader (ready for future use) -->
 <script>
-/* === Mobile Print Patch – Fix for iOS scaling & missing images === */
 window.addEventListener("load", () => {
-  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  if (!isMobile) return;
-
-  const btn = document.getElementById("print-btn");
-  if (!btn) return;
-
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-
-    const container = document.getElementById("pedigree-container");
-    if (!container) return;
-
-    // 🟢 Grab the live SVG markup including images
-    const svgMarkup = container.querySelector("svg").outerHTML;
-    const styleBlocks = Array.from(document.querySelectorAll("style"))
-      .map(s => s.outerHTML)
-      .join("\n");
-
-    // 🟢 Open a clean, printable popup (bypasses iOS scaling limits)
-    const popup = window.open("", "_blank", "width=1200,height=800");
-    if (!popup) {
-      alert("Please allow pop-ups for ShowTails to print pedigrees.");
-      return;
-    }
-
-    popup.document.write(`
-      <html>
-        <head>
-          <title>Print Pedigree</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          ${styleBlocks}
-          <style>
-            @page { size: landscape; margin: 0; }
-            html, body {
-              width: 100vw;
-              height: 100vh;
-              margin: 0;
-              padding: 0;
-              background: white;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              overflow: hidden;
-            }
-            svg {
-              width: 95vw !important;
-              height: auto !important;
-              max-height: 95vh !important;
-              margin: auto;
-              display: block;
-              background: white !important;
-            }
-          </style>
-        </head>
-        <body>${svgMarkup}</body>
-      </html>
-    `);
-
-    popup.document.close();
-
-    // 🟢 Wait for render, trigger print, then close popup
-    setTimeout(() => {
-      popup.focus();
-      popup.print();
-      setTimeout(() => popup.close(), 1500);
-    }, 600);
-  });
+  const borderEl = document.getElementById("border");
+  const urlParams = new URLSearchParams(window.location.search);
+  const borderURL = urlParams.get("border");
+  if (borderURL) {
+    borderEl.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", borderURL);
+    borderEl.setAttribute("href", borderURL);
+  } else {
+    borderEl.style.display = "none";
+  }
 });
 </script>
-
-
 
 </body>
-</html> 
- 
-
-
+</html>
