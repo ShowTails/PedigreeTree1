@@ -570,6 +570,21 @@ function getParam(name) {
       return viewBoxState.lastApplied || viewBoxState.original;
     }
 
+    const viewport = svg.querySelector('.svg-pan-zoom_viewport');
+    const viewportState = viewport
+      ? {
+          hadTransform: viewport.hasAttribute('transform'),
+          transform: viewport.getAttribute('transform'),
+          hadStyle: viewport.hasAttribute('style'),
+          style: viewport.getAttribute('style')
+        }
+      : null;
+
+    if (viewport) {
+      viewport.removeAttribute('transform');
+      viewport.removeAttribute('style');
+    }
+
     try {
       const bbox = svg.getBBox();
       if (!bbox) return viewBoxState.lastApplied || viewBoxState.original;
@@ -585,6 +600,21 @@ function getParam(name) {
     } catch (err) {
       console.warn('Unable to compute tight viewBox for print:', err);
       return viewBoxState.lastApplied || viewBoxState.original;
+    }
+    finally {
+      if (viewport && viewportState) {
+        if (viewportState.hadTransform && viewportState.transform !== null) {
+          viewport.setAttribute('transform', viewportState.transform);
+        } else {
+          viewport.removeAttribute('transform');
+        }
+
+        if (viewportState.hadStyle && viewportState.style !== null) {
+          viewport.setAttribute('style', viewportState.style);
+        } else {
+          viewport.removeAttribute('style');
+        }
+      }
     }
   }
 
@@ -604,6 +634,36 @@ function getParam(name) {
       svg.setAttribute('viewBox', viewBoxState.original);
     }
     viewBoxState.lastApplied = null;
+  }
+
+  function createPrintClone(padding = 40) {
+    if (!svg) return null;
+
+    const clone = svg.cloneNode(true);
+    if (!clone) return null;
+
+    const viewBox = computeTightViewBox(padding) || viewBoxState.original;
+    if (viewBox) {
+      clone.setAttribute('viewBox', viewBox);
+    }
+
+    clone.removeAttribute('width');
+    clone.removeAttribute('height');
+    clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    clone.removeAttribute('style');
+
+    const viewport = clone.querySelector('.svg-pan-zoom_viewport');
+    if (viewport) {
+      viewport.removeAttribute('transform');
+      viewport.removeAttribute('style');
+    }
+
+    clone.querySelectorAll('[class*="svg-pan-zoom"]').forEach((el) => {
+      if (el === viewport) return;
+      el.remove();
+    });
+
+    return clone;
   }
 
   function validBox(vb) {
@@ -774,6 +834,7 @@ function enablePinchZoom() {
     computeTightViewBox,
     applyPrintViewBox,
     restoreOriginalViewBox,
+    createPrintClone,
     getOriginalViewBox: () => viewBoxState.original,
     isMobile: () => /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
   };
@@ -798,9 +859,26 @@ function enablePinchZoom() {
 
     helpers.applyPrintViewBox(48);
 
-    inst.resize();
-    inst.fit();
-    inst.center();
+    if (typeof inst.updateBBox === 'function') {
+      inst.updateBBox();
+    }
+
+    if (typeof inst.zoom === 'function') {
+      inst.zoom(1);
+    }
+    if (typeof inst.pan === 'function') {
+      inst.pan({ x: 0, y: 0 });
+    }
+
+    if (typeof inst.resize === 'function') {
+      inst.resize();
+    }
+    if (typeof inst.fit === 'function') {
+      inst.fit();
+    }
+    if (typeof inst.center === 'function') {
+      inst.center();
+    }
   }
 
   function restoreAfterPrint() {
@@ -809,15 +887,30 @@ function enablePinchZoom() {
     if (!inst) return;
 
     helpers.restoreOriginalViewBox();
-    inst.resize();
+    if (typeof inst.updateBBox === 'function') {
+      inst.updateBBox();
+    }
+    if (typeof inst.resize === 'function') {
+      inst.resize();
+    }
 
     if (s) {
-      inst.zoom(s.zoom);
-      inst.pan(s.pan);
+      if (typeof inst.zoom === 'function') {
+        inst.zoom(s.zoom);
+      }
+      if (typeof inst.pan === 'function') {
+        inst.pan(s.pan);
+      }
     } else {
-      inst.resetZoom();
-      inst.fit();
-      inst.center();
+      if (typeof inst.resetZoom === 'function') {
+        inst.resetZoom();
+      }
+      if (typeof inst.fit === 'function') {
+        inst.fit();
+      }
+      if (typeof inst.center === 'function') {
+        inst.center();
+      }
     }
   }
 
@@ -857,21 +950,8 @@ function enablePinchZoom() {
     event.preventDefault();
     event.stopImmediatePropagation();
 
-    const container = document.getElementById("pedigree-container");
-    if (!container) return;
-
-    const svgEl = helpers.svg;
-    if (!svgEl) return;
-
-    const viewBox = helpers.computeTightViewBox(48);
-
-    const clone = svgEl.cloneNode(true);
-    if (viewBox) {
-      clone.setAttribute('viewBox', viewBox);
-    }
-
-    clone.removeAttribute('width');
-    clone.removeAttribute('height');
+    const clone = helpers.createPrintClone(48);
+    if (!clone) return;
 
     const svgMarkup = clone.outerHTML;
 
