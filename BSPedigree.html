@@ -78,7 +78,7 @@ svg {
   .title { font-weight: bold; font-size: 20px; }
 
   @page {
-    size: 11in 8.5in;
+    size: 8.5in 11in;
     margin: 0;
   }
 
@@ -88,7 +88,7 @@ svg {
 
   @media print {
     @page {
-      size: 11in 8.5in;
+      size: 8.5in 11in;
       margin: 0;
     }
 
@@ -98,12 +98,6 @@ svg {
       margin: 0;
       padding: 0;
       background: white;
-    }
-
-    html.force-landscape,
-    body.force-landscape {
-      width: 11in;
-      height: 8.5in;
     }
 
     #pedigree-container {
@@ -123,12 +117,6 @@ svg {
       background: white;
     }
 
-    html.force-landscape [data-print-clone],
-    body.force-landscape [data-print-clone] {
-      width: 11in !important;
-      height: 8.5in !important;
-    }
-
     [data-print-clone] svg {
       width: 100vw !important;
       max-width: 100vw !important;
@@ -138,14 +126,6 @@ svg {
       background: white !important;
       margin: 0 auto !important;
       object-fit: contain;
-    }
-
-    html.force-landscape [data-print-clone] svg,
-    body.force-landscape [data-print-clone] svg {
-      width: 11in !important;
-      max-width: 11in !important;
-      height: 8.5in !important;
-      max-height: 8.5in !important;
     }
 
     #print-btn,
@@ -924,20 +904,8 @@ function enablePinchZoom() {
   if (!btn || !helpers) return;
 
   const PADDING = 48;
-  const LANDSCAPE_CLASS = "force-landscape";
-
-  function markLandscape() {
-    document.documentElement.classList.add(LANDSCAPE_CLASS);
-    document.body.classList.add(LANDSCAPE_CLASS);
-  }
-
-  function unmarkLandscape() {
-    document.documentElement.classList.remove(LANDSCAPE_CLASS);
-    document.body.classList.remove(LANDSCAPE_CLASS);
-  }
 
   function prepareForPrint() {
-    markLandscape();
     const wrapper = helpers.mountPrintClone(PADDING);
     if (!wrapper) {
       console.warn("Unable to prepare pedigree for printing.");
@@ -947,7 +915,6 @@ function enablePinchZoom() {
 
   function cleanupAfterPrint() {
     helpers.removePrintClone();
-    unmarkLandscape();
   }
 
   window.addEventListener("beforeprint", prepareForPrint);
