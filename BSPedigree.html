@@ -78,7 +78,7 @@ svg {
   .title { font-weight: bold; font-size: 20px; }
 
   @page {
-    size: 8.5in 11in;
+    size: 11in 8.5in;
     margin: 0;
   }
 
@@ -88,7 +88,7 @@ svg {
 
   @media print {
     @page {
-      size: 8.5in 11in;
+      size: 11in 8.5in;
       margin: 0;
     }
 
@@ -924,7 +924,9 @@ function enablePinchZoom() {
     const mediaQuery = window.matchMedia("print");
     if (mediaQuery) {
       const handleChange = (event) => {
-        if (!event.matches) {
+        if (event.matches) {
+          prepareForPrint();
+        } else {
           cleanupAfterPrint();
         }
       };
