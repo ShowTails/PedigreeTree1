@@ -747,6 +747,10 @@ function enablePinchZoom() {
     }
   }
 
+  // expose helpers so the mobile print shim can reuse the exact print layout
+  window.preparePedigreeForPrint = resetForPrint;
+  window.restorePedigreeAfterPrint = restoreAfterPrint;
+
   // Hook into browser print lifecycle
   window.addEventListener("beforeprint", resetForPrint);
   window.addEventListener("afterprint", restoreAfterPrint);
@@ -776,14 +780,44 @@ function enablePinchZoom() {
     if (!isMobile) return; // only affects mobile
 
     event.preventDefault();
+    event.stopImmediatePropagation();
 
-    const container = document.getElementById("pedigree-container");
-    if (!container) return;
+    const svg = document.getElementById("pedigree-svg");
+    if (!svg) return;
 
-    // Grab the current SVG markup
-    const svgMarkup = container.innerHTML;
+    const prepareForPrint = window.preparePedigreeForPrint;
+    const restoreAfterPrint = window.restorePedigreeAfterPrint;
+    let svgMarkup = "";
 
-    // Also grab all styles from the main document
+    try {
+      if (typeof prepareForPrint === "function") {
+        prepareForPrint();
+      }
+
+      const clonedSvg = svg.cloneNode(true);
+
+      // normalise sizing so the cloned SVG renders exactly like the desktop print preview
+      clonedSvg.removeAttribute("style");
+      clonedSvg.setAttribute("width", "10.8in");
+      clonedSvg.setAttribute("height", "8.3in");
+      clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      clonedSvg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+      clonedSvg.style.width = "10.8in";
+      clonedSvg.style.height = "8.3in";
+      clonedSvg.style.background = "white";
+      clonedSvg.style.display = "block";
+      clonedSvg.style.margin = "0 auto";
+
+      svgMarkup = new XMLSerializer().serializeToString(clonedSvg);
+    } finally {
+      if (typeof restoreAfterPrint === "function") {
+        restoreAfterPrint();
+      }
+    }
+
+    if (!svgMarkup) return;
+
+    // Also grab all styles from the main document so the pedigree theme is preserved
     const styleBlocks = Array.from(document.querySelectorAll('style'))
       .map(styleEl => styleEl.outerHTML)
       .join('\n');
@@ -794,20 +828,22 @@ function enablePinchZoom() {
       return;
     }
 
-    popup.document.write(`
+    const printHtml = `<!DOCTYPE html>
       <html>
         <head>
           <title>Print Pedigree</title>
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           ${styleBlocks}
           <style>
-            @page { size: landscape; margin: 0; }
-            html, body {
-              width: 11in;
-              height: 8.5in;
-              margin: 0;
-              padding: 0;
-              background: white;
+            @page { size: 11in 8.5in landscape; margin: 0; }
+            :root, html, body {
+              width: 11in !important;
+              height: 8.5in !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: white !important;
+            }
+            body {
               display: flex;
               align-items: center;
               justify-content: center;
@@ -815,23 +851,27 @@ function enablePinchZoom() {
             svg {
               width: 10.8in !important;
               height: 8.3in !important;
+              max-width: none !important;
+              max-height: none !important;
               background: white !important;
-              margin: auto;
               display: block;
+              margin: 0 auto;
             }
           </style>
         </head>
         <body>${svgMarkup}</body>
-      </html>
-    `);
-    popup.document.close();
+      </html>`;
 
-    // Wait for the SVG to render, then open print dialog
-    setTimeout(() => {
-      popup.focus();
-      popup.print();
-      setTimeout(() => popup.close(), 1500);
-    }, 600);
+    popup.document.open();
+    popup.addEventListener("load", () => {
+      setTimeout(() => {
+        popup.focus();
+        popup.print();
+        setTimeout(() => popup.close(), 1500);
+      }, 400);
+    }, { once: true });
+    popup.document.write(printHtml);
+    popup.document.close();
   });
 })();
 </script>
