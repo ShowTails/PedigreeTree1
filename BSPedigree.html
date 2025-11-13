@@ -46,12 +46,13 @@
   width: 100vw;
   height: 100vh;
   display: none;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: stretch;
   margin: 0;
   padding: 0;
   background: white;
   z-index: 9999;
+  overflow: hidden;
 }
 
 [data-print-clone] svg {
@@ -63,6 +64,8 @@
   background: white !important;
   margin: 0 auto !important;
   object-fit: contain;
+  flex: 1 1 auto;
+  aspect-ratio: 11 / 8.5;
 }
 
 
@@ -573,7 +576,7 @@ function getParam(name) {
   const originalViewBox = svg ? svg.getAttribute('viewBox') : null;
   const viewBoxState = { original: originalViewBox, lastApplied: null };
 
-  function computeTightViewBox(padding = 40) {
+  function computeTightViewBox(padding = 40, targetRatio = null) {
     if (!svg || typeof svg.getBBox !== 'function') {
       return viewBoxState.lastApplied || viewBoxState.original;
     }
@@ -597,12 +600,32 @@ function getParam(name) {
       const bbox = svg.getBBox();
       if (!bbox) return viewBoxState.lastApplied || viewBoxState.original;
       const pad = Math.max(0, Number.isFinite(padding) ? padding : 0);
-      const x = bbox.x - pad;
-      const y = bbox.y - pad;
-      const width = bbox.width + pad * 2;
-      const height = bbox.height + pad * 2;
+      let x = bbox.x - pad;
+      let y = bbox.y - pad;
+      let width = bbox.width + pad * 2;
+      let height = bbox.height + pad * 2;
       if (!isFinite(width) || !isFinite(height) || width <= 0 || height <= 0) {
         return viewBoxState.lastApplied || viewBoxState.original;
+      }
+      if (targetRatio && isFinite(targetRatio) && targetRatio > 0) {
+        const ratio = width / height;
+        if (isFinite(ratio) && ratio > 0) {
+          if (ratio > targetRatio) {
+            const desiredHeight = width / targetRatio;
+            const extra = desiredHeight - height;
+            if (isFinite(extra)) {
+              y -= extra / 2;
+              height = desiredHeight;
+            }
+          } else if (ratio < targetRatio) {
+            const desiredWidth = height * targetRatio;
+            const extra = desiredWidth - width;
+            if (isFinite(extra)) {
+              x -= extra / 2;
+              width = desiredWidth;
+            }
+          }
+        }
       }
       return `${x} ${y} ${width} ${height}`;
     } catch (err) {
@@ -626,9 +649,9 @@ function getParam(name) {
     }
   }
 
-  function applyPrintViewBox(padding = 40) {
+  function applyPrintViewBox(padding = 40, targetRatio = null) {
     if (!svg) return viewBoxState.lastApplied || viewBoxState.original;
-    const tight = computeTightViewBox(padding) || viewBoxState.original;
+    const tight = computeTightViewBox(padding, targetRatio) || viewBoxState.original;
     if (tight) {
       svg.setAttribute('viewBox', tight);
       viewBoxState.lastApplied = tight;
@@ -644,13 +667,13 @@ function getParam(name) {
     viewBoxState.lastApplied = null;
   }
 
-  function createPrintClone(padding = 40) {
+  function createPrintClone(padding = 40, targetRatio = null) {
     if (!svg) return null;
 
     const clone = svg.cloneNode(true);
     if (!clone) return null;
 
-    const viewBox = computeTightViewBox(padding) || viewBoxState.original;
+    const viewBox = computeTightViewBox(padding, targetRatio) || viewBoxState.original;
     if (viewBox) {
       clone.setAttribute('viewBox', viewBox);
     }
@@ -664,6 +687,7 @@ function getParam(name) {
     clone.style.maxWidth = '100%';
     clone.style.maxHeight = '100%';
     clone.style.display = 'block';
+    clone.style.flex = '1 1 auto';
 
     const viewport = clone.querySelector('.svg-pan-zoom_viewport');
     if (viewport) {
@@ -681,10 +705,10 @@ function getParam(name) {
 
   let activePrintWrapper = null;
 
-  function mountPrintClone(padding = 40) {
+  function mountPrintClone(padding = 40, targetRatio = null) {
     if (!svg) return null;
 
-    const clone = createPrintClone(padding);
+    const clone = createPrintClone(padding, targetRatio);
     if (!clone) return null;
 
     removePrintClone();
@@ -693,6 +717,8 @@ function getParam(name) {
     wrapper.setAttribute('data-print-clone', '');
     wrapper.style.display = 'flex';
     wrapper.style.visibility = 'hidden';
+    wrapper.style.alignItems = 'stretch';
+    wrapper.style.justifyContent = 'stretch';
     wrapper.appendChild(clone);
     document.body.appendChild(wrapper);
 
@@ -906,10 +932,11 @@ function enablePinchZoom() {
   const helpers = window.__pedigreePrintHelpers;
   if (!btn || !helpers) return;
 
-  const PADDING = 48;
+  const PRINT_PADDING = 18;
+  const PRINT_ASPECT_RATIO = 11 / 8.5;
 
   function prepareForPrint() {
-    const wrapper = helpers.mountPrintClone(PADDING);
+    const wrapper = helpers.mountPrintClone(PRINT_PADDING, PRINT_ASPECT_RATIO);
     if (wrapper) {
       wrapper.style.visibility = 'visible';
     }
