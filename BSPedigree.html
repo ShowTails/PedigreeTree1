@@ -40,6 +40,31 @@
     }
   }
 
+[data-print-clone] {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  background: white;
+  z-index: 9999;
+}
+
+[data-print-clone] svg {
+  width: 100%;
+  height: 100%;
+  max-width: 11in;
+  max-height: 8.5in;
+  transform: none !important;
+  background: white !important;
+  margin: 0 auto !important;
+  object-fit: contain;
+}
+
 
 svg {
   display: block;
@@ -78,17 +103,13 @@ svg {
   .title { font-weight: bold; font-size: 20px; }
 
   @page {
-    size: 11in 8.5in;
+    size: landscape;
     margin: 0;
-  }
-
-  [data-print-clone] {
-    display: none;
   }
 
   @media print {
     @page {
-      size: 11in 8.5in;
+      size: landscape;
       margin: 0;
     }
 
@@ -98,34 +119,6 @@ svg {
       margin: 0;
       padding: 0;
       background: white;
-    }
-
-    #pedigree-container {
-      display: none !important;
-    }
-
-    [data-print-clone] {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
-      padding: 0;
-      background: white;
-    }
-
-    [data-print-clone] svg {
-      width: 100vw !important;
-      max-width: 100vw !important;
-      height: 100vh !important;
-      max-height: 100vh !important;
-      transform: none !important;
-      background: white !important;
-      margin: 0 auto !important;
-      object-fit: contain;
     }
 
     #print-btn,
@@ -666,6 +659,11 @@ function getParam(name) {
     clone.removeAttribute('height');
     clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     clone.removeAttribute('style');
+    clone.style.width = '100%';
+    clone.style.height = '100%';
+    clone.style.maxWidth = '100%';
+    clone.style.maxHeight = '100%';
+    clone.style.display = 'block';
 
     const viewport = clone.querySelector('.svg-pan-zoom_viewport');
     if (viewport) {
@@ -693,6 +691,8 @@ function getParam(name) {
 
     const wrapper = document.createElement('div');
     wrapper.setAttribute('data-print-clone', '');
+    wrapper.style.display = 'flex';
+    wrapper.style.visibility = 'hidden';
     wrapper.appendChild(clone);
     document.body.appendChild(wrapper);
 
@@ -705,6 +705,9 @@ function getParam(name) {
       activePrintWrapper.parentNode.removeChild(activePrintWrapper);
     }
     activePrintWrapper = null;
+    if (container) {
+      container.style.visibility = '';
+    }
   }
 
   function validBox(vb) {
@@ -907,6 +910,12 @@ function enablePinchZoom() {
 
   function prepareForPrint() {
     const wrapper = helpers.mountPrintClone(PADDING);
+    if (wrapper) {
+      wrapper.style.visibility = 'visible';
+    }
+    if (helpers.container) {
+      helpers.container.style.visibility = 'hidden';
+    }
     if (!wrapper) {
       console.warn("Unable to prepare pedigree for printing.");
     }
@@ -915,6 +924,9 @@ function enablePinchZoom() {
 
   function cleanupAfterPrint() {
     helpers.removePrintClone();
+    if (helpers.container) {
+      helpers.container.style.visibility = '';
+    }
   }
 
   window.addEventListener("beforeprint", prepareForPrint);
