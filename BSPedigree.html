@@ -58,14 +58,14 @@
 [data-print-clone] svg {
   width: 100%;
   height: 100%;
-  max-width: 11.5in;
-  max-height: 8in;
+  max-width: 11in;
+  max-height: 8.5in;
   transform: none !important;
   background: white !important;
   margin: auto !important;
   object-fit: contain;
   flex: 1 1 auto;
-  aspect-ratio: 23 / 16;
+  aspect-ratio: 11 / 8.5;
 }
 
 
@@ -73,8 +73,8 @@ svg {
   display: block;
   width: 100% !important;     /* slightly under full width to stay on one page */
   height: 100% !important;       /* scale height proportionally */
-  max-height: 8in !important;
-  max-width: 11.2in !important;  /* ensure it fits within landscape bounds */
+  max-height: 8.5in !important;
+  max-width: 11in !important;  /* ensure it fits within landscape bounds */
   transform: none !important;
   margin: auto !important;
   background: white !important;
@@ -106,13 +106,13 @@ svg {
   .title { font-weight: bold; font-size: 20px; }
 
   @page {
-    size: 11.5in 8in;
+    size: 11in 8.5in landscape;
     margin: 0;
   }
 
   @media print {
     @page {
-      size: 11.5in 8in;
+      size: 11in 8.5in landscape;
       margin: 0;
     }
 
@@ -124,8 +124,8 @@ svg {
     }
 
     svg {
-      max-width: 11.5in !important;
-      max-height: 8in !important;
+      max-width: 11in !important;
+      max-height: 8.5in !important;
       width: 100% !important;
       height: auto !important;
     }
@@ -947,12 +947,20 @@ function enablePinchZoom() {
   if (!btn || !helpers) return;
 
   const PRINT_PADDING = 18;
-  const PRINT_ASPECT_RATIO = 11 / 8.5;
+  const PRINT_WIDTH_IN = 11;
+  const PRINT_HEIGHT_IN = 8.5;
+  const PRINT_ASPECT_RATIO = PRINT_WIDTH_IN / PRINT_HEIGHT_IN;
 
   function prepareForPrint() {
     const wrapper = helpers.mountPrintClone(PRINT_PADDING, PRINT_ASPECT_RATIO);
     if (wrapper) {
       wrapper.style.visibility = 'visible';
+      wrapper.style.width = `${PRINT_WIDTH_IN}in`;
+      wrapper.style.height = `${PRINT_HEIGHT_IN}in`;
+      wrapper.style.maxWidth = `${PRINT_WIDTH_IN}in`;
+      wrapper.style.maxHeight = `${PRINT_HEIGHT_IN}in`;
+      wrapper.style.aspectRatio = `${PRINT_WIDTH_IN} / ${PRINT_HEIGHT_IN}`;
+      wrapper.style.margin = '0 auto';
     }
     if (helpers.container) {
       helpers.container.style.visibility = 'hidden';
