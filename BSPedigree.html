@@ -11,61 +11,19 @@
     margin: 0;
     padding: 0;
     width: 100%;
-    min-height: 100vh;
-    height: 100vh;
+    height: 100%;
     overflow: hidden;
     background: white;
   }
 
-  #pedigree-container {
-    width: 100vw;
-    min-height: 100vh;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    background: white;
-  }
-
-  @supports (height: 100dvh) {
-    html, body {
-      min-height: 100dvh;
-      height: 100dvh;
-    }
-
-    #pedigree-container {
-      min-height: 100dvh;
-      height: 100dvh;
-    }
-  }
-
-[data-print-clone] {
-  position: fixed;
-  inset: 0;
+ #pedigree-container {
   width: 100vw;
   height: 100vh;
-  display: none;
-  align-items: stretch;
-  justify-content: stretch;
-  margin: 0;
-  padding: 0;
-  background: white;
-  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-}
-
-[data-print-clone] svg {
-  width: 100%;
-  height: 100%;
-  max-width: 11in;
-  max-height: 8.5in;
-  transform: none !important;
-  background: white !important;
-  margin: auto !important;
-  object-fit: contain;
-  flex: 1 1 auto;
-  aspect-ratio: 11 / 8.5;
+  background: white;
 }
 
 
@@ -73,14 +31,14 @@ svg {
   display: block;
   width: 100% !important;     /* slightly under full width to stay on one page */
   height: 100% !important;       /* scale height proportionally */
-  max-height: 8.5in !important;
-  max-width: 11in !important;  /* ensure it fits within landscape bounds */
+  max-height: 8.3in !important;
+  max-width: 11.5in !important;  /* ensure it fits within page bounds */
   transform: none !important;
-  margin: auto !important;
+  margin: 0.1in auto 0 !important;
   background: white !important;
   page-break-inside: avoid !important;
-    touch-action: none !important;
-  -ms-touch-action: none !important;
+    touch-action: none !important;       
+  -ms-touch-action: none !important;   
 }
 
 
@@ -94,8 +52,8 @@ svg {
     fill: white;
   }
 
-  .male { fill: #cce5ff; }
-  .female { fill: #f8d7da; }
+  .male { fill: #FFFFFF; }
+  .female { fill: #FFFFFF; }
 
   text {
     font-size: 14px;
@@ -111,32 +69,39 @@ svg {
   }
 
   @media print {
-    @page {
-      size: 11in 8.5in landscape;
-      margin: 0;
-    }
-
-    #pedigree-container,
-    [data-print-clone] {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    svg {
-      max-width: 11in !important;
-      max-height: 8.5in !important;
-      width: 100% !important;
-      height: auto !important;
-    }
-
     html, body {
-      width: 100%;
-      height: 100%;
+      width: 11in;
+      height: 8.5in;
       margin: 0;
       padding: 0;
+      overflow: visible;
       background: white;
     }
+
+    /* Center the pedigree on the page */
+#pedigree-container {
+  width: 11in;
+  height: 8.5in;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  background: white;
+}
+
+svg {
+  width: 10.8in !important;
+  height: 8.3in !important;
+  transform: none !important;
+  background: white !important;
+  margin: 0 auto !important;
+}
+
+#logo {
+  outline: 2px dashed red;
+}
+
 
     #print-btn,
     #reset-view-btn {
@@ -587,168 +552,6 @@ function getParam(name) {
 (function () {
   const svg = document.getElementById('pedigree-svg');
   const container = document.getElementById('pedigree-container');
-  const originalViewBox = svg ? svg.getAttribute('viewBox') : null;
-  const viewBoxState = { original: originalViewBox, lastApplied: null };
-
-  function computeTightViewBox(padding = 40, targetRatio = null) {
-    if (!svg || typeof svg.getBBox !== 'function') {
-      return viewBoxState.lastApplied || viewBoxState.original;
-    }
-
-    const viewport = svg.querySelector('.svg-pan-zoom_viewport');
-    const viewportState = viewport
-      ? {
-          hadTransform: viewport.hasAttribute('transform'),
-          transform: viewport.getAttribute('transform'),
-          hadStyle: viewport.hasAttribute('style'),
-          style: viewport.getAttribute('style')
-        }
-      : null;
-
-    if (viewport) {
-      viewport.removeAttribute('transform');
-      viewport.removeAttribute('style');
-    }
-
-    try {
-      const bbox = svg.getBBox();
-      if (!bbox) return viewBoxState.lastApplied || viewBoxState.original;
-      const pad = Math.max(0, Number.isFinite(padding) ? padding : 0);
-      let x = bbox.x - pad;
-      let y = bbox.y - pad;
-      let width = bbox.width + pad * 2;
-      let height = bbox.height + pad * 2;
-      if (!isFinite(width) || !isFinite(height) || width <= 0 || height <= 0) {
-        return viewBoxState.lastApplied || viewBoxState.original;
-      }
-      if (targetRatio && isFinite(targetRatio) && targetRatio > 0) {
-        const ratio = width / height;
-        if (isFinite(ratio) && ratio > 0) {
-          if (ratio > targetRatio) {
-            const desiredHeight = width / targetRatio;
-            const extra = desiredHeight - height;
-            if (isFinite(extra)) {
-              y -= extra / 2;
-              height = desiredHeight;
-            }
-          } else if (ratio < targetRatio) {
-            const desiredWidth = height * targetRatio;
-            const extra = desiredWidth - width;
-            if (isFinite(extra)) {
-              x -= extra / 2;
-              width = desiredWidth;
-            }
-          }
-        }
-      }
-      return `${x} ${y} ${width} ${height}`;
-    } catch (err) {
-      console.warn('Unable to compute tight viewBox for print:', err);
-      return viewBoxState.lastApplied || viewBoxState.original;
-    }
-    finally {
-      if (viewport && viewportState) {
-        if (viewportState.hadTransform && viewportState.transform !== null) {
-          viewport.setAttribute('transform', viewportState.transform);
-        } else {
-          viewport.removeAttribute('transform');
-        }
-
-        if (viewportState.hadStyle && viewportState.style !== null) {
-          viewport.setAttribute('style', viewportState.style);
-        } else {
-          viewport.removeAttribute('style');
-        }
-      }
-    }
-  }
-
-  function applyPrintViewBox(padding = 40, targetRatio = null) {
-    if (!svg) return viewBoxState.lastApplied || viewBoxState.original;
-    const tight = computeTightViewBox(padding, targetRatio) || viewBoxState.original;
-    if (tight) {
-      svg.setAttribute('viewBox', tight);
-      viewBoxState.lastApplied = tight;
-    }
-    return tight;
-  }
-
-  function restoreOriginalViewBox() {
-    if (!svg) return;
-    if (viewBoxState.original) {
-      svg.setAttribute('viewBox', viewBoxState.original);
-    }
-    viewBoxState.lastApplied = null;
-  }
-
-  function createPrintClone(padding = 40, targetRatio = null) {
-    if (!svg) return null;
-
-    const clone = svg.cloneNode(true);
-    if (!clone) return null;
-
-    const viewBox = computeTightViewBox(padding, targetRatio) || viewBoxState.original;
-    if (viewBox) {
-      clone.setAttribute('viewBox', viewBox);
-    }
-
-    clone.removeAttribute('width');
-    clone.removeAttribute('height');
-    clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    clone.removeAttribute('style');
-    clone.style.width = '100%';
-    clone.style.height = '100%';
-    clone.style.maxWidth = '100%';
-    clone.style.maxHeight = '100%';
-    clone.style.display = 'block';
-    clone.style.flex = '1 1 auto';
-
-    const viewport = clone.querySelector('.svg-pan-zoom_viewport');
-    if (viewport) {
-      viewport.removeAttribute('transform');
-      viewport.removeAttribute('style');
-    }
-
-    clone.querySelectorAll('[class*="svg-pan-zoom"]').forEach((el) => {
-      if (el === viewport) return;
-      el.remove();
-    });
-
-    return clone;
-  }
-
-  let activePrintWrapper = null;
-
-  function mountPrintClone(padding = 40, targetRatio = null) {
-    if (!svg) return null;
-
-    const clone = createPrintClone(padding, targetRatio);
-    if (!clone) return null;
-
-    removePrintClone();
-
-    const wrapper = document.createElement('div');
-    wrapper.setAttribute('data-print-clone', '');
-    wrapper.style.display = 'flex';
-    wrapper.style.visibility = 'hidden';
-    wrapper.style.alignItems = 'stretch';
-    wrapper.style.justifyContent = 'stretch';
-    wrapper.appendChild(clone);
-    document.body.appendChild(wrapper);
-
-    activePrintWrapper = wrapper;
-    return wrapper;
-  }
-
-  function removePrintClone() {
-    if (activePrintWrapper && activePrintWrapper.parentNode) {
-      activePrintWrapper.parentNode.removeChild(activePrintWrapper);
-    }
-    activePrintWrapper = null;
-    if (container) {
-      container.style.visibility = '';
-    }
-  }
 
   function validBox(vb) {
     return vb && isFinite(vb.width) && vb.width > 0 && isFinite(vb.height) && vb.height > 0;
@@ -911,101 +714,124 @@ function enablePinchZoom() {
   });
 
   window.addEventListener("load", tryInit);
-
-  window.addEventListener("orientationchange", () => {
-    setTimeout(() => {
-      if (!initialized) {
-        tryInit();
-      } else {
-        fitToContainer();
-      }
-    }, 150);
-  });
-
-  window.__pedigreePrintHelpers = {
-    svg,
-    container,
-    computeTightViewBox,
-    applyPrintViewBox,
-    restoreOriginalViewBox,
-    createPrintClone,
-    mountPrintClone,
-    removePrintClone,
-    getOriginalViewBox: () => viewBoxState.original,
-    isMobile: () => /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
-  };
 })();
 </script>
 
   
 
 <script>
-  /* === Guaranteed centered & scaled printing via dedicated clone === */
+  /* === Guaranteed centered & scaled printing using active zoom === */
 (() => {
   const btn = document.getElementById("print-btn");
-  const helpers = window.__pedigreePrintHelpers;
-  if (!btn || !helpers) return;
 
-  const PRINT_PADDING = 18;
-  const PRINT_WIDTH_IN = 11;
-  const PRINT_HEIGHT_IN = 8.5;
-  const PRINT_ASPECT_RATIO = PRINT_WIDTH_IN / PRINT_HEIGHT_IN;
+  function resetForPrint() {
+    const inst = window.panZoomInstance;
+    if (!inst) return;
 
-  function prepareForPrint() {
-    const wrapper = helpers.mountPrintClone(PRINT_PADDING, PRINT_ASPECT_RATIO);
-    if (wrapper) {
-      wrapper.style.visibility = 'visible';
-      wrapper.style.width = `${PRINT_WIDTH_IN}in`;
-      wrapper.style.height = `${PRINT_HEIGHT_IN}in`;
-      wrapper.style.maxWidth = `${PRINT_WIDTH_IN}in`;
-      wrapper.style.maxHeight = `${PRINT_HEIGHT_IN}in`;
-      wrapper.style.aspectRatio = `${PRINT_WIDTH_IN} / ${PRINT_HEIGHT_IN}`;
-      wrapper.style.margin = '0 auto';
-    }
-    if (helpers.container) {
-      helpers.container.style.visibility = 'hidden';
-    }
-    if (!wrapper) {
-      console.warn("Unable to prepare pedigree for printing.");
-    }
-    return wrapper;
+    // Save current zoom/pan so we can restore later
+    window._savedState = { pan: inst.getPan(), zoom: inst.getZoom() };
+
+    // Reset to full view, center, and apply perfect print scale
+    inst.resetZoom();
+    inst.center();
+    inst.zoom(1.45);
+    inst.pan({ x: 60, y: 120 });
   }
 
-  function cleanupAfterPrint() {
-    helpers.removePrintClone();
-    if (helpers.container) {
-      helpers.container.style.visibility = '';
+  function restoreAfterPrint() {
+    const inst = window.panZoomInstance;
+    const s = window._savedState;
+    if (inst && s) {
+      inst.zoom(s.zoom);
+      inst.pan(s.pan);
     }
   }
 
-  window.addEventListener("beforeprint", prepareForPrint);
-  window.addEventListener("afterprint", cleanupAfterPrint);
+  // Hook into browser print lifecycle
+  window.addEventListener("beforeprint", resetForPrint);
+  window.addEventListener("afterprint", restoreAfterPrint);
 
-  if (typeof window.matchMedia === "function") {
-    const mediaQuery = window.matchMedia("print");
-    if (mediaQuery) {
-      const handleChange = (event) => {
-        if (event.matches) {
-          prepareForPrint();
-        } else {
-          cleanupAfterPrint();
-        }
-      };
-
-      if (typeof mediaQuery.addEventListener === "function") {
-        mediaQuery.addEventListener("change", handleChange);
-      } else if (typeof mediaQuery.addListener === "function") {
-        mediaQuery.addListener(handleChange);
-      }
-    }
-  }
-
+  // Button click handler
   btn.addEventListener("click", () => {
-    prepareForPrint();
+    resetForPrint();
     requestAnimationFrame(() => {
-      window.print();
-      setTimeout(cleanupAfterPrint, 600);
+      setTimeout(() => {
+        window.print();
+        setTimeout(restoreAfterPrint, 800);
+      }, 200);
     });
+  });
+})();
+</script>
+
+   
+  <script>
+      /* === Mobile Print === */
+(function() {
+  const btn = document.getElementById("print-btn");
+  if (!btn) return;
+
+  btn.addEventListener("click", (event) => {
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    if (!isMobile) return; // only affects mobile
+
+    event.preventDefault();
+
+    const container = document.getElementById("pedigree-container");
+    if (!container) return;
+
+    // Grab the current SVG markup
+    const svgMarkup = container.innerHTML;
+
+    // Also grab all styles from the main document
+    const styleBlocks = Array.from(document.querySelectorAll('style'))
+      .map(styleEl => styleEl.outerHTML)
+      .join('\n');
+
+    const popup = window.open("", "_blank", "width=1200,height=800");
+    if (!popup) {
+      alert("Please allow pop-ups for ShowTails to print pedigrees.");
+      return;
+    }
+
+    popup.document.write(`
+      <html>
+        <head>
+          <title>Print Pedigree</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          ${styleBlocks}
+          <style>
+            @page { size: landscape; margin: 0; }
+            html, body {
+              width: 11in;
+              height: 8.5in;
+              margin: 0;
+              padding: 0;
+              background: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            svg {
+              width: 10.8in !important;
+              height: 8.3in !important;
+              background: white !important;
+              margin: auto;
+              display: block;
+            }
+          </style>
+        </head>
+        <body>${svgMarkup}</body>
+      </html>
+    `);
+    popup.document.close();
+
+    // Wait for the SVG to render, then open print dialog
+    setTimeout(() => {
+      popup.focus();
+      popup.print();
+      setTimeout(() => popup.close(), 1500);
+    }, 600);
   });
 })();
 </script>
