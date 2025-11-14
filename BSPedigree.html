@@ -58,14 +58,14 @@
 [data-print-clone] svg {
   width: 100%;
   height: 100%;
-  max-width: 8.5in;
-  max-height: 11in;
+  max-width: 11.5in;
+  max-height: 8in;
   transform: none !important;
   background: white !important;
-  margin: 0 auto !important;
+  margin: auto !important;
   object-fit: contain;
   flex: 1 1 auto;
-  aspect-ratio: 8.5 / 11;
+  aspect-ratio: 23 / 16;
 }
 
 
@@ -73,14 +73,14 @@ svg {
   display: block;
   width: 100% !important;     /* slightly under full width to stay on one page */
   height: 100% !important;       /* scale height proportionally */
-  max-height: 10.7in !important;
-  max-width: 8.2in !important;  /* ensure it fits within page bounds */
+  max-height: 8in !important;
+  max-width: 11.2in !important;  /* ensure it fits within landscape bounds */
   transform: none !important;
-  margin: 0.1in auto 0 !important;
+  margin: auto !important;
   background: white !important;
   page-break-inside: avoid !important;
     touch-action: none !important;
-  -ms-touch-action: none !important;   
+  -ms-touch-action: none !important;
 }
 
 
@@ -106,14 +106,28 @@ svg {
   .title { font-weight: bold; font-size: 20px; }
 
   @page {
-    size: portrait;
+    size: 11.5in 8in;
     margin: 0;
   }
 
   @media print {
     @page {
-      size: portrait;
+      size: 11.5in 8in;
       margin: 0;
+    }
+
+    #pedigree-container,
+    [data-print-clone] {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    svg {
+      max-width: 11.5in !important;
+      max-height: 8in !important;
+      width: 100% !important;
+      height: auto !important;
     }
 
     html, body {
