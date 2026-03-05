@@ -225,7 +225,7 @@ function getParam(name) {
   <text x="310" y="480" text-anchor="left" data-field="gc"></text>
   <text x="110" y="500" text-anchor="left" class="label"></text>
   <text x="110" y="500" text-anchor="left" data-field="custom"></text>
-  
+   <text x="110" y="530" text-anchor="left" data-field="win1"></text>
 
   <line x1="420" y1="440" x2="450" y2="165" stroke="black"/>
   <line x1="420" y1="440" x2="450" y2="715" stroke="black"/>
@@ -248,7 +248,7 @@ function getParam(name) {
   <text x="680" y="200" text-anchor="left" data-field="sgc"></text>
   <text x="460" y="220" text-anchor="left" class="label"></text>
   <text x="460" y="220" text-anchor="left" data-field="scustom"></text>
- 
+ <text x="460" y="250" text-anchor="left" data-field="swin1"></text>
 
   
   <line x1="770" y1="165" x2="800" y2="35" stroke="black"/>
@@ -272,7 +272,7 @@ function getParam(name) {
   <text x="680" y="750" text-anchor="left" data-field="dgc"></text>
   <text x="460" y="770" text-anchor="left" class="label"></text>
   <text x="460" y="770" text-anchor="left" data-field="dcustom"></text>
-
+ <text x="460" y="810" text-anchor="left" data-field="dwin1"></text>
 
 
   <line x1="770" y1="715" x2="800" y2="580" stroke="black"/>
@@ -919,6 +919,29 @@ setSvgImage('background-image', 'background-image');
 </script>
 
   <script>
+function setSvgMultilineText(textEl, raw) {
+  if (!textEl) return;
+
+  // URLSearchParams already decoded %0A into \n, but this also covers literal "\n"
+  const lines = String(raw || "").replace(/\\n/g, "\n").split("\n");
+
+  // Clear existing content
+  while (textEl.firstChild) textEl.removeChild(textEl.firstChild);
+
+  const x = textEl.getAttribute("x") || 0;
+  const lineHeight = 14; // adjust as needed
+
+  lines.forEach((line, i) => {
+    const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+    tspan.setAttribute("x", x);
+    tspan.setAttribute("dy", i === 0 ? "0" : String(lineHeight));
+    tspan.textContent = line;
+    textEl.appendChild(tspan);
+  });
+}
+</script>
+
+  <script>
 // === Glide-safe Clickable Pedigree Boxes ===
 document.querySelectorAll('.box').forEach(box => {
   box.style.cursor = 'pointer';
@@ -934,6 +957,7 @@ document.querySelectorAll('.box').forEach(box => {
 </body>
 
 </html>
+
 
 
 
